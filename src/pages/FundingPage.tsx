@@ -5,11 +5,13 @@ import {
   CartesianGrid,
   Legend,
   ComposedChart,
+  Rectangle,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts';
+import type { BarProps } from 'recharts';
 import { KpiCard } from '../components/KpiCard';
 import { PageHeader, Panel } from '../components/Panel';
 import { usePortfolio } from '../context/PortfolioContext';
@@ -23,6 +25,24 @@ import {
 } from '../utils';
 
 type Metric = 'funding' | 'projects';
+
+function renderSovereignBar(props: BarProps) {
+  const { x, y, width, height, fill } = props;
+  const { payload } = props as BarProps & {
+    payload?: { Nonsovereign?: number };
+  };
+
+  return (
+    <Rectangle
+      x={Number(x) || 0}
+      y={Number(y) || 0}
+      width={Number(width) || 0}
+      height={Number(height) || 0}
+      fill={typeof fill === 'string' ? fill : COLORS.blue}
+      radius={payload?.Nonsovereign ? 0 : [3, 3, 0, 0]}
+    />
+  );
+}
 
 export function FundingPage() {
   const {
@@ -138,7 +158,7 @@ export function FundingPage() {
                   labelFormatter={(year) => `Approval year ${year}`}
                 />
                 <Legend iconType="circle" iconSize={8} />
-                <Bar dataKey="Sovereign" stackId="a" fill={COLORS.blue} radius={[3, 3, 0, 0]} />
+                <Bar dataKey="Sovereign" stackId="a" fill={COLORS.blue} shape={renderSovereignBar} />
                 <Bar dataKey="Nonsovereign" stackId="a" fill={COLORS.teal} radius={[3, 3, 0, 0]} />
               </ComposedChart>
             </ResponsiveContainer>
