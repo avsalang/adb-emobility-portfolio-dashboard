@@ -89,7 +89,7 @@ export function PortfolioMap({
       center: [101, 20],
       zoom: 2.25,
       minZoom: 1.25,
-      attributionControl: { compact: true },
+      attributionControl: false,
     });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     mapRef.current = map;
@@ -192,11 +192,20 @@ export function PortfolioMap({
   }, [features]);
 
   return (
-    <div
-      ref={containerRef}
-      className="portfolio-map"
-      role="region"
-      aria-label="Interactive map of recipient countries, associated funding, and project counts"
-    />
+    <div className="portfolio-map-shell">
+      <div
+        ref={containerRef}
+        className="portfolio-map"
+        role="region"
+        aria-label="Interactive map of recipient countries, associated funding, and project counts"
+      />
+      <div className="portfolio-map-attribution">
+        <a href="https://openfreemap.org/" target="_blank" rel="noreferrer">OpenFreeMap</a>
+        <span>·</span>
+        <a href="https://openmaptiles.org/" target="_blank" rel="noreferrer">OpenMapTiles</a>
+        <span>·</span>
+        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>
+      </div>
+    </div>
   );
 }

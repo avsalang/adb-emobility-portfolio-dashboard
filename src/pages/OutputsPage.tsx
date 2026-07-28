@@ -1,17 +1,62 @@
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 import { KpiCard } from '../components/KpiCard';
 import { PageHeader, Panel } from '../components/Panel';
 import { usePortfolio } from '../context/PortfolioContext';
-import { COLORS, fmtNumber, groupCount, humanize, sum } from '../utils';
+import { COLORS, fmtNumber, fmtPercent, sum } from '../utils';
+
+const OUTPUT_FAMILY_LABELS: Record<string, string> = {
+  finance_market: 'Finance and market development',
+  policy_capacity: 'Policy and institutional capacity',
+  fleet_deployment: 'Vehicle and fleet deployment',
+  charging_energy_integration: 'Charging and energy integration',
+  integrated_transport_infrastructure: 'Integrated transport infrastructure',
+  digital_systems: 'Digital mobility systems',
+  depots_operations: 'Depots and operations',
+  manufacturing_battery: 'Manufacturing and batteries',
+  service_coverage: 'Service coverage',
+};
+
+const OUTPUT_PROFILE_DEFINITIONS = [
+  {
+    key: 'delivered_or_operational_physical_output',
+    label: 'Delivered or operational physical outputs',
+    color: COLORS.plum,
+  },
+  {
+    key: 'physical_output_in_progress',
+    label: 'Physical outputs in progress',
+    color: COLORS.coral,
+  },
+  {
+    key: 'planned_or_financed_physical_output',
+    label: 'Planned or financed physical outputs',
+    color: COLORS.blue,
+  },
+  {
+    key: 'knowledge_policy_or_capacity_output_only',
+    label: 'Policy, knowledge and capacity outputs',
+    color: COLORS.teal,
+  },
+  {
+    key: 'finance_input_or_eligibility_only',
+    label: 'Financing or eligibility only',
+    color: COLORS.amber,
+  },
+  {
+    key: 'no_distinct_or_only_potential_emobility_output',
+    label: 'No distinct or only potential e-mobility output',
+    color: COLORS.slate,
+  },
+] as const;
+
+const PHYSICAL_OUTPUT_FAMILIES = new Set([
+  'fleet_deployment',
+  'charging_energy_integration',
+  'integrated_transport_infrastructure',
+  'depots_operations',
+  'manufacturing_battery',
+  'digital_systems',
+  'service_coverage',
+]);
 
 export function OutputsPage() {
   const { filteredKpis, filteredProjects } = usePortfolio();
@@ -35,25 +80,45 @@ export function OutputsPage() {
     ),
     (row) => row.value_numeric ?? 0,
   );
-  const traction = directSafe.find(
-    (row) => row.project_number === '50010-002' && row.indicator === 'traction_substations',
-  );
   const quantified = filteredKpis.filter((row) => row.is_quantified);
+  const quantifiedPhysicalProjects = new Set(
+    directSafe
+      .filter(
+        (row) =>
+          row.is_quantified && PHYSICAL_OUTPUT_FAMILIES.has(row.kpi_family),
+      )
+      .map((row) => row.project_number),
+  ).size;
 
-  const families = groupCount(
-    filteredKpis.filter(
-      (row) => row.kpi_family !== 'no_distinct_emobility_output',
-    ),
-    (row) => row.kpi_family,
-  ).map((row) => ({
-    ...row,
-    label: humanize(row.name),
-  }));
+  const families = (() => {
+    const grouped = new Map<string, { records: number; projects: Set<string> }>();
+    filteredKpis
+      .filter((row) => row.kpi_family !== 'no_distinct_emobility_output')
+      .forEach((row) => {
+        const current = grouped.get(row.kpi_family) ?? {
+          records: 0,
+          projects: new Set<string>(),
+        };
+        current.records += 1;
+        current.projects.add(row.project_number);
+        grouped.set(row.kpi_family, current);
+      });
+    return [...grouped.entries()]
+      .map(([name, value]) => ({
+        name,
+        label: OUTPUT_FAMILY_LABELS[name] ?? name,
+        records: value.records,
+        projects: value.projects.size,
+      }))
+      .sort((a, b) => b.projects - a.projects);
+  })();
 
-  const outputProfiles = groupCount(
-    filteredProjects,
-    (project) => project.manual_output_primary_profile,
-  );
+  const outputProfiles = OUTPUT_PROFILE_DEFINITIONS.map((definition) => ({
+    ...definition,
+    value: filteredProjects.filter(
+      (project) => project.manual_output_primary_profile === definition.key,
+    ).length,
+  })).filter((row) => row.value > 0);
 
   return (
     <div className="page">
@@ -62,50 +127,70 @@ export function OutputsPage() {
       />
 
       <div className="kpi-grid">
-        <KpiCard label="Delivered fleet" value={fmtNumber(deliveredFleet)} />
-        <KpiCard label="Fleet pipeline" value={fmtNumber(pipelineFleet)} />
-        <KpiCard label="Quantified indicators" value={fmtNumber(quantified.length)} />
-        <KpiCard label="Traction substations" value={fmtNumber(traction?.value_numeric ?? 33)} />
+        <KpiCard label="Delivered fleet (vehicles)" value={fmtNumber(deliveredFleet)} />
+        <KpiCard label="Fleet pipeline (vehicles)" value={fmtNumber(pipelineFleet)} />
+        <KpiCard label="Quantified KPI records" value={fmtNumber(quantified.length)} />
+        <KpiCard
+          label="Projects with quantified physical outputs"
+          value={fmtNumber(quantifiedPhysicalProjects)}
+        />
       </div>
 
       <div className="outputs-grid">
         <Panel
-          title="Output record profile"
-          subtitle="Structured records by output category."
+          title="Output coverage by project"
+          subtitle="Unique projects with a structured record in each output category."
         >
-          <div className="chart-output">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={families} layout="vertical" margin={{ top: 2, right: 18, bottom: 0, left: 8 }}>
-                <CartesianGrid stroke="#edf2f6" horizontal={false} />
-                <XAxis type="number" allowDecimals={false} axisLine={false} tickLine={false} tick={{ fontSize: 16 }} />
-                <YAxis type="category" dataKey="label" width={240} axisLine={false} tickLine={false} tick={{ fontSize: 16 }} />
-                <Tooltip
-                  formatter={(value) => [
-                    `${fmtNumber(Number(value))} records`,
-                    'Records',
-                  ]}
-                />
-                <Bar dataKey="value" radius={[0, 5, 5, 0]}>
-                  {families.map((row, index) => (
-                    <Cell key={row.name} fill={[COLORS.blue, COLORS.teal, COLORS.amber, COLORS.plum, COLORS.coral][index % 5]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="coverage-bars output-coverage-bars">
+            {families.map((row) => (
+              <div
+                key={row.name}
+                title={`${fmtNumber(row.records)} structured records across ${fmtNumber(row.projects)} projects`}
+              >
+                <span>{row.label}</span>
+                <strong>{fmtNumber(row.projects)}</strong>
+                <small>{fmtPercent(row.projects / Math.max(filteredProjects.length, 1))}</small>
+                <i>
+                  <em
+                    style={{
+                      width: `${(row.projects / Math.max(families[0]?.projects ?? 1, 1)) * 100}%`,
+                    }}
+                  />
+                </i>
+              </div>
+            ))}
           </div>
         </Panel>
 
         <Panel
-          title="Project output maturity"
-          subtitle="Projects by the maturity of their e-mobility outputs."
+          title="Primary output profile"
+          subtitle="Share of projects by their principal e-mobility output profile."
         >
+          <div
+            className="output-profile-stack"
+            role="img"
+            aria-label={outputProfiles
+              .map((row) => `${row.label}: ${row.value} projects`)
+              .join('; ')}
+          >
+            {outputProfiles.map((row) => (
+              <i
+                key={row.key}
+                style={{
+                  width: `${(row.value / Math.max(filteredProjects.length, 1)) * 100}%`,
+                  background: row.color,
+                }}
+                title={`${row.label}: ${row.value} projects`}
+              />
+            ))}
+          </div>
           <div className="maturity-list">
-            {outputProfiles.map((row, index) => (
-              <div key={row.name}>
-                <i style={{ background: [COLORS.teal, COLORS.blue, COLORS.amber, COLORS.plum, COLORS.slate, COLORS.coral][index % 6] }} />
-                <span>{humanize(row.name)}</span>
+            {outputProfiles.map((row) => (
+              <div key={row.key}>
+                <i style={{ background: row.color }} />
+                <span>{row.label}</span>
                 <strong>{row.value}</strong>
-                <em>{Math.round((row.value / Math.max(filteredProjects.length, 1)) * 100)}%</em>
+                <em>{fmtPercent(row.value / Math.max(filteredProjects.length, 1))}</em>
               </div>
             ))}
           </div>

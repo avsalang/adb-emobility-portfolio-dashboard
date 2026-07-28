@@ -57,6 +57,16 @@ export function ProjectsPage() {
   const SortIcon = sortDirection === 'asc' ? ArrowUp : ArrowDown;
   const ariaSort = (key: SortKey): 'ascending' | 'descending' | 'none' =>
     sortKey === key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none';
+  const sortValue = `${sortKey}:${sortDirection}`;
+  const changeMobileSort = (value: string) => {
+    const [key, direction] = value.split(':') as [
+      SortKey,
+      'asc' | 'desc',
+    ];
+    setSortKey(key);
+    setSortDirection(direction);
+    setPage(1);
+  };
 
   return (
     <div className="page">
@@ -77,6 +87,19 @@ export function ProjectsPage() {
       >
         {visible.length ? (
           <>
+            <label className="mobile-project-sort">
+              <span>Sort projects</span>
+              <select
+                value={sortValue}
+                onChange={(event) => changeMobileSort(event.target.value)}
+              >
+                <option value="approval_year:desc">Newest approval year</option>
+                <option value="approval_year:asc">Oldest approval year</option>
+                <option value="funding_total_usd_m:desc">Highest associated funding</option>
+                <option value="funding_total_usd_m:asc">Lowest associated funding</option>
+                <option value="project_title:asc">Project title A–Z</option>
+              </select>
+            </label>
             <div className="project-table-wrap">
               <table className="project-table">
                 <thead>
@@ -87,7 +110,7 @@ export function ProjectsPage() {
                     <th>Status</th>
                     <th>Role</th>
                     <th>Leading subthemes</th>
-                    <th aria-sort={ariaSort('funding_total_usd_m')}><button onClick={() => changeSort('funding_total_usd_m')}>Funding {sortKey === 'funding_total_usd_m' && <SortIcon size={12} />}</button></th>
+                    <th aria-sort={ariaSort('funding_total_usd_m')}><button onClick={() => changeSort('funding_total_usd_m')}>Associated funding {sortKey === 'funding_total_usd_m' && <SortIcon size={12} />}</button></th>
                     <th aria-label="Open source" />
                   </tr>
                 </thead>
@@ -117,7 +140,7 @@ export function ProjectsPage() {
                           {splitTags(project.manual_subthemes).length > 2 && <b>+{splitTags(project.manual_subthemes).length - 2}</b>}
                         </div>
                       </td>
-                      <td data-label="Funding"><strong className="money-cell">{fmtMoney(project.funding_total_usd_m, true)}</strong></td>
+                      <td data-label="Associated funding"><strong className="money-cell">{fmtMoney(project.funding_total_usd_m, true)}</strong></td>
                       <td data-label="Source">
                         <a
                           href={project.project_url}

@@ -1,10 +1,9 @@
 import { Activity } from 'lucide-react';
 import { useMemo } from 'react';
 import {
-  Area,
+  Bar,
+  BarChart,
   CartesianGrid,
-  ComposedChart,
-  Line,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -27,6 +26,7 @@ export function OverviewPage() {
   const {
     filteredProjects,
     filteredRecipients,
+    filters,
     setFilters,
   } = usePortfolio();
 
@@ -61,8 +61,22 @@ export function OverviewPage() {
       row[project.status as 'Active'] += 1;
       years.set(project.approval_year, row);
     });
-    return [...years.values()].sort((a, b) => a.year - b.year);
-  }, [filteredProjects]);
+    return Array.from(
+      { length: filters.yearEnd - filters.yearStart + 1 },
+      (_, index) => {
+        const year = filters.yearStart + index;
+        return years.get(year) ?? {
+          year,
+          funding: 0,
+          projects: 0,
+          Active: 0,
+          Closed: 0,
+          Approved: 0,
+          Proposed: 0,
+        };
+      },
+    );
+  }, [filteredProjects, filters.yearEnd, filters.yearStart]);
 
   const mapCountries = useMemo<MapCountry[]>(() => {
     const grouped = new Map<string, { funding: number; projects: Set<string> }>();
@@ -95,6 +109,15 @@ export function OverviewPage() {
       })),
     [filteredProjects],
   );
+  const regionalAllocation = useMemo(() => {
+    const rows = filteredRecipients.filter(
+      (row) => row.recipient_type !== 'Country',
+    );
+    return {
+      funding: sum(rows, (row) => row.funding_usd_m),
+      projects: new Set(rows.map((row) => row.project_number)).size,
+    };
+  }, [filteredRecipients]);
 
   return (
     <div className="page">
@@ -115,7 +138,7 @@ export function OverviewPage() {
           value={fmtMoney(totalFunding, true)}
         />
         <KpiCard
-          label="Dedicated e-mobility"
+          label="Associated funding of dedicated projects"
           value={fmtMoney(sum(dedicated, (project) => project.funding_total_usd_m), true)}
         />
         <KpiCard
@@ -131,60 +154,63 @@ export function OverviewPage() {
       <div className="overview-grid">
         <Panel
           className="timeline-panel"
-          title="Portfolio growth and delivery pipeline"
-          subtitle="Projects and associated funding by approval year."
-          action={<span className="unit-chip">USD million</span>}
+          title="Project pipeline by approval year"
+          subtitle="Associated funding and project count by recorded approval year."
         >
-          <div className="chart-lg">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={timeline} margin={{ top: 12, right: 12, bottom: 0, left: 0 }}>
-                <CartesianGrid stroke="#e8eef4" vertical={false} />
-                <XAxis dataKey="year" tick={{ fontSize: 16 }} axisLine={false} tickLine={false} />
-                <YAxis
-                  yAxisId="funding"
-                  tickFormatter={(value) => `$${value >= 1000 ? `${(value / 1000).toFixed(1)}B` : `${value}M`}`}
-                  tick={{ fontSize: 16 }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={58}
-                />
-                <YAxis
-                  yAxisId="projects"
-                  orientation="right"
-                  allowDecimals={false}
-                  tick={{ fontSize: 16 }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={28}
-                />
-                <Tooltip
-                  formatter={(value, name) =>
-                    name === 'Associated funding'
-                      ? [fmtMoney(Number(value), true), name]
-                      : [fmtNumber(Number(value)), name]
-                  }
-                  labelFormatter={(year) => `Approval year ${year}`}
-                />
-                <Area
-                  yAxisId="funding"
-                  type="monotone"
-                  dataKey="funding"
-                  name="Associated funding"
-                  fill="#d7ecf1"
-                  stroke={COLORS.teal}
-                  strokeWidth={2}
-                />
-                <Line
-                  yAxisId="projects"
-                  type="monotone"
-                  dataKey="projects"
-                  name="Projects"
-                  stroke={COLORS.blue}
-                  strokeWidth={2}
-                  dot={{ fill: COLORS.blue, r: 3 }}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
+          <div className="timeline-small-multiples">
+            <div className="timeline-chart">
+              <div className="timeline-chart-label">
+                <span>Associated funding</span>
+                <small>USD million</small>
+              </div>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={timeline} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+                  <CartesianGrid stroke="#e8eef4" vertical={false} />
+                  <XAxis dataKey="year" hide />
+                  <YAxis
+                    tickFormatter={(value) => `$${value >= 1000 ? `${(value / 1000).toFixed(1)}B` : `${value}M`}`}
+                    tick={{ fontSize: 16 }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={62}
+                  />
+                  <Tooltip
+                    formatter={(value) => [fmtMoney(Number(value), true), 'Associated funding']}
+                    labelFormatter={(year) => `Approval year ${year}`}
+                  />
+                  <Bar dataKey="funding" fill={COLORS.teal} radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="timeline-chart">
+              <div className="timeline-chart-label">
+                <span>Projects</span>
+                <small>Count</small>
+              </div>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={timeline} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+                  <CartesianGrid stroke="#e8eef4" vertical={false} />
+                  <XAxis
+                    dataKey="year"
+                    tick={{ fontSize: 16 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    allowDecimals={false}
+                    tick={{ fontSize: 16 }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={62}
+                  />
+                  <Tooltip
+                    formatter={(value) => [`${fmtNumber(Number(value))} projects`, 'Projects']}
+                    labelFormatter={(year) => `Approval year ${year}`}
+                  />
+                  <Bar dataKey="projects" fill={COLORS.blue} radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </Panel>
 
@@ -239,8 +265,8 @@ export function OverviewPage() {
         </Panel>
 
         <Panel
-          title="Leading recipient allocations"
-          subtitle="Largest recipient allocations in the current selection."
+          title="Leading country allocations"
+          subtitle="Largest country allocations in the current selection."
         >
           <div className="ranking-list">
             {mapCountries.slice(0, 8).map((country, index) => (
@@ -262,6 +288,18 @@ export function OverviewPage() {
               </button>
             ))}
           </div>
+          {regionalAllocation.projects > 0 && (
+            <div className="regional-allocation-summary">
+              <div>
+                <span>Regional allocations</span>
+                <small>
+                  {regionalAllocation.projects} project
+                  {regionalAllocation.projects === 1 ? '' : 's'}
+                </small>
+              </div>
+              <strong>{fmtMoney(regionalAllocation.funding, true)}</strong>
+            </div>
+          )}
         </Panel>
       </div>
 

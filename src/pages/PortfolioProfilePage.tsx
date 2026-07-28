@@ -1,21 +1,15 @@
 import { useMemo } from 'react';
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
   Cell,
   Pie,
   PieChart,
   ResponsiveContainer,
   Tooltip,
-  XAxis,
-  YAxis,
 } from 'recharts';
-import { KpiCard } from '../components/KpiCard';
 import { PageHeader, Panel } from '../components/Panel';
 import { usePortfolio } from '../context/PortfolioContext';
 import {
-  SUBTHEME_COLORS,
+  COLORS,
   fmtNumber,
   fmtPercent,
   groupCount,
@@ -32,127 +26,46 @@ const ATTRIBUTION_COLORS: Record<string, string> = {
   other: '#94a3b8',
 };
 
-const DISTRIBUTION_COLORS = [
-  '#1769aa',
-  '#178f8f',
-  '#e9a62d',
-  '#735a83',
-  '#df6b55',
-  '#547fa5',
-  '#55a89b',
-  '#b76b7d',
-];
-
-type DistributionDatum = {
-  name: string;
-  value: number;
-  color: string;
-  tooltipTextColor: string;
-};
-
-function DistributionTooltip({
-  active,
-  payload,
-  total,
-  unitLabel,
-}: {
-  active?: boolean;
-  payload?: Array<{ payload?: DistributionDatum }>;
-  total: number;
-  unitLabel: string;
-}) {
-  const row = payload?.[0]?.payload;
-  if (!active || !row) return null;
-
-  return (
-    <div
-      className="distribution-tooltip"
-      style={{
-        background: row.color,
-        color: row.tooltipTextColor,
-      }}
-    >
-      <span>{row.name}</span>
-      <strong>
-        {fmtNumber(row.value)} {unitLabel} ·{' '}
-        {fmtPercent(row.value / Math.max(total, 1))}
-      </strong>
-    </div>
-  );
-}
-
-function DistributionPie({
+function CoverageBars({
   rows,
-  centerLabel,
-  unitLabel = 'projects',
+  denominator,
+  formatter = (value) => value,
+  color = COLORS.blue,
+  onSelect,
 }: {
   rows: { name: string; value: number }[];
-  centerLabel: string;
-  unitLabel?: string;
+  denominator: number;
+  formatter?: (value: string) => string;
+  color?: string;
+  onSelect?: (value: string) => void;
 }) {
-  const total = rows.reduce((sum, row) => sum + row.value, 0);
-  const chartRows: DistributionDatum[] = rows.map((row, index) => ({
-    ...row,
-    color: DISTRIBUTION_COLORS[index % DISTRIBUTION_COLORS.length],
-    tooltipTextColor: [2, 4, 6].includes(index % DISTRIBUTION_COLORS.length)
-      ? '#13243a'
-      : '#ffffff',
-  }));
+  const rowContent = (row: { name: string; value: number }) => (
+    <>
+      <span>{formatter(row.name)}</span>
+      <strong>{fmtNumber(row.value)}</strong>
+      <small>{fmtPercent(row.value / Math.max(denominator, 1))}</small>
+      <i>
+        <em
+          style={{
+            width: `${Math.min((row.value / Math.max(denominator, 1)) * 100, 100)}%`,
+            background: color,
+          }}
+        />
+      </i>
+    </>
+  );
 
   return (
-    <div className="distribution-pie">
-      <div className="distribution-pie-chart">
-        <div
-          className="distribution-pie-graphic"
-          role="img"
-          aria-label={`${fmtNumber(total)} ${centerLabel}. ${chartRows
-            .map((row) => `${row.name}: ${fmtNumber(row.value)} ${unitLabel}`)
-            .join('; ')}.`}
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={chartRows}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={54}
-                outerRadius={82}
-                paddingAngle={2}
-                isAnimationActive={false}
-              >
-                {chartRows.map((row) => (
-                  <Cell
-                    key={row.name}
-                    fill={row.color}
-                  />
-                ))}
-              </Pie>
-              <Tooltip
-                content={<DistributionTooltip total={total} unitLabel={unitLabel} />}
-                cursor={false}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="distribution-pie-center">
-            <strong>{fmtNumber(total)}</strong>
-            <span>{centerLabel}</span>
-          </div>
-        </div>
-      </div>
-      <div className="distribution-legend" role="list">
-        {chartRows.map((row) => (
-          <div key={row.name} role="listitem">
-            <i
-              style={{
-                background: row.color,
-              }}
-            />
-            <span>{row.name}</span>
-            <strong>{row.value}</strong>
-            <small>{fmtPercent(row.value / Math.max(total, 1))}</small>
-          </div>
-        ))}
-      </div>
+    <div className="coverage-bars">
+      {rows.map((row) =>
+        onSelect ? (
+          <button type="button" key={row.name} onClick={() => onSelect(row.name)}>
+            {rowContent(row)}
+          </button>
+        ) : (
+          <div key={row.name}>{rowContent(row)}</div>
+        ),
+      )}
     </div>
   );
 }
@@ -172,7 +85,6 @@ export function PortfolioProfilePage() {
   const {
     filteredProjects,
     filteredSubthemes,
-    filteredKpis,
     setFilters,
   } = usePortfolio();
 
@@ -195,10 +107,6 @@ export function PortfolioProfilePage() {
     (project) => project.manual_attribution_class,
   );
   const sectors = groupCount(filteredProjects, (project) => project.sector);
-  const profiles = groupCount(
-    filteredProjects,
-    (project) => project.manual_output_primary_profile,
-  );
 
   const valueChain = useMemo(() => {
     const counts = new Map<string, Set<string>>();
@@ -242,56 +150,28 @@ export function PortfolioProfilePage() {
       .slice(0, 10);
   }, [filteredProjects]);
 
-  const manufacturingProjects =
-    subthemes.find((row) => row.name === 'manufacturing_supply_chains_and_battery_circularity')?.projects ?? 0;
-  const physicalProjects = profiles
-    .filter((row) => /physical/i.test(row.name))
-    .reduce((total, row) => total + row.value, 0);
-  const modeAssignmentCount = modes.reduce((total, row) => total + row.value, 0);
-
   return (
     <div className="page">
       <PageHeader
         title="Technology profile"
       />
 
-      <div className="kpi-grid">
-        <KpiCard label="Fleet transition" value={fmtNumber(subthemes.find((row) => row.name === 'vehicles_and_fleet_transition')?.projects ?? 0)} />
-        <KpiCard label="Charging and power" value={fmtNumber(subthemes.find((row) => row.name === 'charging_swapping_and_power_system_integration')?.projects ?? 0)} />
-        <KpiCard label="Physical delivery" value={fmtNumber(physicalProjects)} />
-        <KpiCard label="Manufacturing and circularity" value={fmtNumber(manufacturingProjects)} />
-      </div>
-
       <div className="profile-main-grid">
         <Panel
           title="Subtheme coverage"
           subtitle="Unique projects by multi-label e-mobility subtheme."
         >
-          <div
-            className="chart-profile"
-            role="img"
-            aria-label={`Project coverage by e-mobility subtheme. ${subthemes
-              .map((row) => `${shortSubtheme(row.name)}: ${row.projects}`)
-              .join('; ')}.`}
-          >
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={subthemes} layout="vertical" margin={{ top: 4, right: 20, bottom: 0, left: 8 }}>
-                <CartesianGrid stroke="#edf2f6" horizontal={false} />
-                <XAxis type="number" allowDecimals={false} axisLine={false} tickLine={false} tick={{ fontSize: 16 }} />
-                <YAxis type="category" dataKey="name" width={250} tickFormatter={shortSubtheme} axisLine={false} tickLine={false} tick={{ fontSize: 16 }} />
-                <Tooltip
-                  formatter={(value) => [
-                    `${fmtNumber(Number(value))} projects`,
-                    'Projects',
-                  ]}
-                  labelFormatter={shortSubtheme}
-                />
-                <Bar dataKey="projects" radius={[0, 5, 5, 0]} onClick={(row) => setFilters((current) => ({ ...current, subtheme: String(row.name) }))}>
-                  {subthemes.map((row) => <Cell key={row.name} fill={SUBTHEME_COLORS[row.name]} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <CoverageBars
+            rows={subthemes.map((row) => ({
+              name: row.name,
+              value: row.projects,
+            }))}
+            denominator={filteredProjects.length}
+            formatter={shortSubtheme}
+            onSelect={(subtheme) =>
+              setFilters((current) => ({ ...current, subtheme }))
+            }
+          />
         </Panel>
 
         <Panel
@@ -331,7 +211,7 @@ export function PortfolioProfilePage() {
             </div>
             <div className="legend-rows">
               {attribution.map((row) => (
-                <button key={row.name} onClick={() => setFilters((current) => ({ ...current, attribution: row.name }))}>
+                <button type="button" key={row.name} onClick={() => setFilters((current) => ({ ...current, attribution: row.name }))}>
                   <i style={{ background: ATTRIBUTION_COLORS[row.name] ?? '#94a3b8' }} />
                   <span>{humanize(row.name)}</span>
                   <strong>{row.value}</strong>
@@ -346,46 +226,48 @@ export function PortfolioProfilePage() {
       <div className="two-column-grid">
         <Panel
           title="Vehicle and transport modes"
-          subtitle={`${fmtNumber(modeAssignmentCount)} project-mode assignments; projects may span groups.`}
+          subtitle="Unique project coverage by grouped mode; projects may span groups."
         >
-          <DistributionPie rows={modes} centerLabel="assignments" unitLabel="assignments" />
+          <CoverageBars
+            rows={modes}
+            denominator={filteredProjects.length}
+            color={COLORS.teal}
+          />
         </Panel>
 
         <Panel
           title="Sector distribution"
           subtitle="Projects by primary ADB sector."
         >
-          <DistributionPie rows={sectors} centerLabel="projects" />
+          <CoverageBars
+            rows={sectors}
+            denominator={filteredProjects.length}
+          />
         </Panel>
       </div>
 
       <div className="two-column-grid">
         <Panel
           title="Value-chain stages"
-          subtitle="Unique projects across multi-label value-chain stages."
+          subtitle="Project coverage across multi-label value-chain stages."
         >
-          <div className="compact-bars amber">
-            {valueChain.map((row) => (
-              <div key={row.name}>
-                <span>{humanize(row.name)}</span><strong>{row.value}</strong>
-                <i><em style={{ width: `${(row.value / Math.max(valueChain[0]?.value ?? 1, 1)) * 100}%` }} /></i>
-              </div>
-            ))}
-          </div>
+          <CoverageBars
+            rows={valueChain}
+            denominator={filteredProjects.length}
+            formatter={humanize}
+            color={COLORS.amber}
+          />
         </Panel>
 
         <Panel
           title="Cross-cutting priorities"
-          subtitle="Most common priorities identified in project records."
+          subtitle="Multi-label project coverage; related priorities may overlap."
         >
-          <div className="compact-bars priorities">
-            {crossCutting.map((row) => (
-              <div key={row.name}>
-                <span>{humanize(row.name)}</span><strong>{row.value}</strong>
-                <i><em style={{ width: `${(row.value / Math.max(crossCutting[0]?.value ?? 1, 1)) * 100}%` }} /></i>
-              </div>
-            ))}
-          </div>
+          <CoverageBars
+            rows={crossCutting}
+            denominator={filteredProjects.length}
+            formatter={humanize}
+          />
         </Panel>
       </div>
     </div>

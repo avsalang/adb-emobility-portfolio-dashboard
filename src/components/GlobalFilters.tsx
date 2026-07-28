@@ -53,13 +53,16 @@ export function GlobalFilters() {
     value: (typeof filters)[K],
   ) => setFilters((current) => ({ ...current, [key]: value }));
   const activeFilterCount = [
-    filters.status,
-    filters.recipient,
-    filters.sector,
-    filters.subtheme,
-    filters.assistance,
-    filters.attribution,
-  ].filter((value) => value !== 'All').length;
+    filters.search.trim() !== '',
+    filters.status !== 'All',
+    filters.recipient !== 'All',
+    filters.sector !== 'All',
+    filters.subtheme !== 'All',
+    filters.assistance !== 'All',
+    filters.attribution !== 'All',
+    filters.yearStart !== options.years[0] ||
+      filters.yearEnd !== options.years.at(-1),
+  ].filter(Boolean).length;
 
   return (
     <section className={`global-filters ${expanded ? 'expanded' : ''}`}>
