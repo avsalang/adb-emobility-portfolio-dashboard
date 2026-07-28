@@ -51,8 +51,8 @@ function DistributionPie({
   centerLabel: string;
 }) {
   const total = rows.reduce((sum, row) => sum + row.value, 0);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const activeRow = rows[activeIndex] ?? rows[0];
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const activeRow = activeIndex === null ? undefined : rows[activeIndex];
 
   return (
     <div className="distribution-pie">
@@ -69,6 +69,7 @@ function DistributionPie({
                 paddingAngle={2}
                 isAnimationActive={false}
                 onMouseEnter={(_, index) => setActiveIndex(index)}
+                onMouseLeave={() => setActiveIndex(null)}
               >
                 {rows.map((row, index) => (
                   <Cell
@@ -98,7 +99,11 @@ function DistributionPie({
       </div>
       <div className="distribution-legend">
         {rows.map((row, index) => (
-          <div key={row.name} onMouseEnter={() => setActiveIndex(index)}>
+          <div
+            key={row.name}
+            onMouseEnter={() => setActiveIndex(index)}
+            onMouseLeave={() => setActiveIndex(null)}
+          >
             <i
               style={{
                 background:
