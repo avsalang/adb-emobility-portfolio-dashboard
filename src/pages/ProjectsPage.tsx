@@ -70,6 +70,7 @@ export function ProjectsPage() {
 
       <Panel
         title={`${projects.length} projects`}
+        subtitle="Sortable records for the current selection."
         className="project-table-panel"
       >
         {visible.length ? (

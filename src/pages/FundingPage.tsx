@@ -118,7 +118,10 @@ export function FundingPage() {
       </div>
 
       <div className="two-column-grid funding-charts">
-        <Panel title="Sovereign and nonsovereign trajectory">
+        <Panel
+          title="Sovereign and nonsovereign trajectory"
+          subtitle="Funding or project counts by approval year."
+        >
           <div className="chart-xl">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={sovereigntyByYear} margin={{ top: 12, right: 8, bottom: 0, left: 0 }}>
@@ -142,7 +145,10 @@ export function FundingPage() {
           </div>
         </Panel>
 
-        <Panel title="Assistance mix over time">
+        <Panel
+          title="Assistance mix over time"
+          subtitle="Grant, loan and technical assistance by approval year."
+        >
           <div className="chart-xl">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={modalityByYear} margin={{ top: 12, right: 8, bottom: 0, left: 0 }}>
@@ -168,7 +174,10 @@ export function FundingPage() {
         </Panel>
       </div>
 
-      <Panel title="Recipient ranking">
+      <Panel
+        title="Recipient ranking"
+        subtitle="Recipients ranked by funding or project count."
+      >
         <div className="recipient-bars">
           {recipients.slice(0, 15).map((recipient, index) => {
             const value = recipient[metric];

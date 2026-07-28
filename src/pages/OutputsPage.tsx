@@ -64,7 +64,10 @@ export function OutputsPage() {
       </div>
 
       <div className="outputs-grid">
-        <Panel title="Output record profile">
+        <Panel
+          title="Output record profile"
+          subtitle="Reviewed KPI records by output family."
+        >
           <div className="chart-output">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={families} layout="vertical" margin={{ top: 2, right: 18, bottom: 0, left: 8 }}>
@@ -87,7 +90,10 @@ export function OutputsPage() {
           </div>
         </Panel>
 
-        <Panel title="Project output maturity">
+        <Panel
+          title="Project output maturity"
+          subtitle="Projects by the maturity of their e-mobility outputs."
+        >
           <div className="maturity-list">
             {outputProfiles.map((row, index) => (
               <div key={row.name}>

@@ -210,7 +210,10 @@ export function PortfolioProfilePage() {
       </div>
 
       <div className="profile-main-grid">
-        <Panel title="Subtheme coverage">
+        <Panel
+          title="Subtheme coverage"
+          subtitle="Unique projects by multi-label e-mobility subtheme."
+        >
           <div className="chart-profile">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={subthemes} layout="vertical" margin={{ top: 4, right: 20, bottom: 0, left: 8 }}>
@@ -232,7 +235,10 @@ export function PortfolioProfilePage() {
           </div>
         </Panel>
 
-        <Panel title="E-mobility attribution">
+        <Panel
+          title="E-mobility attribution"
+          subtitle="How central e-mobility is to each project."
+        >
           <div className="pie-profile">
             <div className="pie-chart-wrap">
               <ResponsiveContainer width="100%" height="100%">
@@ -273,17 +279,26 @@ export function PortfolioProfilePage() {
       </div>
 
       <div className="two-column-grid">
-        <Panel title="Vehicle and transport modes">
+        <Panel
+          title="Vehicle and transport modes"
+          subtitle="Unique projects by grouped mode; projects may span groups."
+        >
           <DistributionPie rows={modes} centerLabel="mode tags" />
         </Panel>
 
-        <Panel title="Sector distribution">
+        <Panel
+          title="Sector distribution"
+          subtitle="Projects by primary ADB sector."
+        >
           <DistributionPie rows={sectors} centerLabel="projects" />
         </Panel>
       </div>
 
       <div className="two-column-grid">
-        <Panel title="Value-chain stages">
+        <Panel
+          title="Value-chain stages"
+          subtitle="Unique projects across multi-label value-chain stages."
+        >
           <div className="compact-bars amber">
             {valueChain.map((row) => (
               <div key={row.name}>
@@ -294,7 +309,10 @@ export function PortfolioProfilePage() {
           </div>
         </Panel>
 
-        <Panel title="Cross-cutting priorities">
+        <Panel
+          title="Cross-cutting priorities"
+          subtitle="Most common priorities identified in project records."
+        >
           <div className="focus-cloud">
             {crossCutting.map((row, index) => (
               <span key={row.name} style={{ '--weight': Math.max(0.78, 1.12 - index * 0.035) } as React.CSSProperties}>

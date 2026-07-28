@@ -132,6 +132,7 @@ export function OverviewPage() {
         <Panel
           className="timeline-panel"
           title="Portfolio growth and delivery pipeline"
+          subtitle="Projects and associated funding by approval year."
           action={<span className="unit-chip">USD million</span>}
         >
           <div className="chart-lg">
@@ -187,7 +188,10 @@ export function OverviewPage() {
           </div>
         </Panel>
 
-        <Panel title="Delivery status">
+        <Panel
+          title="Delivery status"
+          subtitle="Current status of projects in the filtered portfolio."
+        >
           <div className="status-stack">
             <div className="status-track">
               {statusMix.map((item) => (
@@ -224,6 +228,7 @@ export function OverviewPage() {
         <Panel
           className="map-panel"
           title="Geographic footprint"
+          subtitle="Associated funding by recipient economy."
         >
           <PortfolioMap
             countries={mapCountries}
@@ -233,7 +238,10 @@ export function OverviewPage() {
           />
         </Panel>
 
-        <Panel title="Leading recipient allocations">
+        <Panel
+          title="Leading recipient allocations"
+          subtitle="Largest recipient allocations in the current selection."
+        >
           <div className="ranking-list">
             {mapCountries.slice(0, 8).map((country, index) => (
               <button

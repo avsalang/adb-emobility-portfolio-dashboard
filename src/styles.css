@@ -887,12 +887,21 @@ input:focus-visible {
 }
 
 .map-panel .panel-body {
+  flex: 1;
+  display: flex;
+  min-height: 390px;
   padding: 0;
 }
 
+.map-panel {
+  display: flex;
+  flex-direction: column;
+}
+
 .portfolio-map {
+  flex: 1;
   width: 100%;
-  height: 390px;
+  min-height: 390px;
   background: #e9f0f4;
 }
 
