@@ -54,10 +54,12 @@ function DistributionTooltip({
   active,
   payload,
   total,
+  unitLabel,
 }: {
   active?: boolean;
   payload?: Array<{ payload?: DistributionDatum }>;
   total: number;
+  unitLabel: string;
 }) {
   const row = payload?.[0]?.payload;
   if (!active || !row) return null;
@@ -72,7 +74,7 @@ function DistributionTooltip({
     >
       <span>{row.name}</span>
       <strong>
-        {fmtNumber(row.value)} projects ·{' '}
+        {fmtNumber(row.value)} {unitLabel} ·{' '}
         {fmtPercent(row.value / Math.max(total, 1))}
       </strong>
     </div>
@@ -82,9 +84,11 @@ function DistributionTooltip({
 function DistributionPie({
   rows,
   centerLabel,
+  unitLabel = 'projects',
 }: {
   rows: { name: string; value: number }[];
   centerLabel: string;
+  unitLabel?: string;
 }) {
   const total = rows.reduce((sum, row) => sum + row.value, 0);
   const chartRows: DistributionDatum[] = rows.map((row, index) => ({
@@ -98,7 +102,13 @@ function DistributionPie({
   return (
     <div className="distribution-pie">
       <div className="distribution-pie-chart">
-        <div className="distribution-pie-graphic">
+        <div
+          className="distribution-pie-graphic"
+          role="img"
+          aria-label={`${fmtNumber(total)} ${centerLabel}. ${chartRows
+            .map((row) => `${row.name}: ${fmtNumber(row.value)} ${unitLabel}`)
+            .join('; ')}.`}
+        >
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -118,7 +128,7 @@ function DistributionPie({
                 ))}
               </Pie>
               <Tooltip
-                content={<DistributionTooltip total={total} />}
+                content={<DistributionTooltip total={total} unitLabel={unitLabel} />}
                 cursor={false}
               />
             </PieChart>
@@ -129,9 +139,9 @@ function DistributionPie({
           </div>
         </div>
       </div>
-      <div className="distribution-legend">
+      <div className="distribution-legend" role="list">
         {chartRows.map((row) => (
-          <div key={row.name}>
+          <div key={row.name} role="listitem">
             <i
               style={{
                 background: row.color,
@@ -237,6 +247,7 @@ export function PortfolioProfilePage() {
   const physicalProjects = profiles
     .filter((row) => /physical/i.test(row.name))
     .reduce((total, row) => total + row.value, 0);
+  const modeAssignmentCount = modes.reduce((total, row) => total + row.value, 0);
 
   return (
     <div className="page">
@@ -256,7 +267,13 @@ export function PortfolioProfilePage() {
           title="Subtheme coverage"
           subtitle="Unique projects by multi-label e-mobility subtheme."
         >
-          <div className="chart-profile">
+          <div
+            className="chart-profile"
+            role="img"
+            aria-label={`Project coverage by e-mobility subtheme. ${subthemes
+              .map((row) => `${shortSubtheme(row.name)}: ${row.projects}`)
+              .join('; ')}.`}
+          >
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={subthemes} layout="vertical" margin={{ top: 4, right: 20, bottom: 0, left: 8 }}>
                 <CartesianGrid stroke="#edf2f6" horizontal={false} />
@@ -282,7 +299,13 @@ export function PortfolioProfilePage() {
           subtitle="How central e-mobility is to each project."
         >
           <div className="pie-profile">
-            <div className="pie-chart-wrap">
+            <div
+              className="pie-chart-wrap"
+              role="img"
+              aria-label={`${filteredProjects.length} projects by e-mobility attribution. ${attribution
+                .map((row) => `${humanize(row.name)}: ${row.value}`)
+                .join('; ')}.`}
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -323,9 +346,9 @@ export function PortfolioProfilePage() {
       <div className="two-column-grid">
         <Panel
           title="Vehicle and transport modes"
-          subtitle="Unique projects by grouped mode; projects may span groups."
+          subtitle={`${fmtNumber(modeAssignmentCount)} project-mode assignments; projects may span groups.`}
         >
-          <DistributionPie rows={modes} centerLabel="mode assignments" />
+          <DistributionPie rows={modes} centerLabel="assignments" unitLabel="assignments" />
         </Panel>
 
         <Panel
@@ -355,11 +378,12 @@ export function PortfolioProfilePage() {
           title="Cross-cutting priorities"
           subtitle="Most common priorities identified in project records."
         >
-          <div className="focus-cloud">
-            {crossCutting.map((row, index) => (
-              <span key={row.name} style={{ '--weight': Math.max(0.78, 1.12 - index * 0.035) } as React.CSSProperties}>
-                {humanize(row.name)} <b>{row.value}</b>
-              </span>
+          <div className="compact-bars priorities">
+            {crossCutting.map((row) => (
+              <div key={row.name}>
+                <span>{humanize(row.name)}</span><strong>{row.value}</strong>
+                <i><em style={{ width: `${(row.value / Math.max(crossCutting[0]?.value ?? 1, 1)) * 100}%` }} /></i>
+              </div>
             ))}
           </div>
         </Panel>

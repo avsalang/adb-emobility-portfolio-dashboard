@@ -4258,3 +4258,101 @@ small {
   white-space: normal;
   line-height: 1.35;
 }
+
+/* Interaction and accessibility refinements */
+:root {
+  --slate-400: #64748b;
+}
+
+.filter-title span,
+.distribution-legend small,
+.distribution-pie-center span,
+.pie-center span {
+  color: #64748b;
+}
+
+.legend-rows button {
+  min-height: 44px;
+}
+
+.range-control select {
+  height: 44px;
+}
+
+.compact-bars.priorities i em {
+  background: var(--blue);
+}
+
+.project-title-button {
+  width: 100%;
+  display: block;
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+.project-title-button:hover strong {
+  color: var(--blue);
+}
+
+.project-table tbody tr:focus-within {
+  background: #f4f8fb;
+}
+
+.project-table th[aria-sort] button {
+  min-height: 44px;
+}
+
+@media (max-width: 1120px) {
+  .sidebar .sidebar-nav {
+    scroll-padding-inline: 12px;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(191, 219, 254, 0.65) transparent;
+  }
+
+  .sidebar .sidebar-nav::-webkit-scrollbar {
+    display: block;
+    height: 4px;
+  }
+
+  .sidebar .sidebar-nav::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background: rgba(191, 219, 254, 0.65);
+  }
+
+  .sidebar .sidebar-nav .nav-link {
+    scroll-snap-align: center;
+  }
+}
+
+@media (max-width: 720px) {
+  .masthead {
+    height: 64px;
+    min-height: 64px;
+    flex-basis: 64px;
+    padding: 6px 12px;
+  }
+
+  .masthead > img {
+    width: 96px;
+    height: 44px;
+    flex-basis: 96px;
+  }
+
+  .sidebar .sidebar-nav {
+    gap: 5px;
+    padding: 6px 10px;
+  }
+
+  .filter-primary-row {
+    min-height: 60px;
+    padding: 8px 12px;
+  }
+
+  .project-table td::before {
+    color: #64748b;
+  }
+}

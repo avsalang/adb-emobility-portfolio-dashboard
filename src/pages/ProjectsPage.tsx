@@ -55,6 +55,8 @@ export function ProjectsPage() {
   };
 
   const SortIcon = sortDirection === 'asc' ? ArrowUp : ArrowDown;
+  const ariaSort = (key: SortKey): 'ascending' | 'descending' | 'none' =>
+    sortKey === key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none';
 
   return (
     <div className="page">
@@ -79,13 +81,13 @@ export function ProjectsPage() {
               <table className="project-table">
                 <thead>
                   <tr>
-                    <th>Project</th>
-                    <th><button onClick={() => changeSort('approval_year')}>Year {sortKey === 'approval_year' && <SortIcon size={12} />}</button></th>
+                    <th aria-sort={ariaSort('project_title')}><button onClick={() => changeSort('project_title')}>Project {sortKey === 'project_title' && <SortIcon size={12} />}</button></th>
+                    <th aria-sort={ariaSort('approval_year')}><button onClick={() => changeSort('approval_year')}>Year {sortKey === 'approval_year' && <SortIcon size={12} />}</button></th>
                     <th>Recipient</th>
                     <th>Status</th>
                     <th>Role</th>
                     <th>Leading subthemes</th>
-                    <th><button onClick={() => changeSort('funding_total_usd_m')}>Funding {sortKey === 'funding_total_usd_m' && <SortIcon size={12} />}</button></th>
+                    <th aria-sort={ariaSort('funding_total_usd_m')}><button onClick={() => changeSort('funding_total_usd_m')}>Funding {sortKey === 'funding_total_usd_m' && <SortIcon size={12} />}</button></th>
                     <th aria-label="Open source" />
                   </tr>
                 </thead>
@@ -94,7 +96,15 @@ export function ProjectsPage() {
                     <tr key={project.project_number} onClick={() => setSelectedProject(project)}>
                       <td data-label="Project">
                         <span>{project.project_number}</span>
-                        <strong>{project.project_title}</strong>
+                        <button
+                          className="project-title-button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setSelectedProject(project);
+                          }}
+                        >
+                          <strong>{project.project_title}</strong>
+                        </button>
                         <small>{project.sector} · {project.project_type}</small>
                       </td>
                       <td data-label="Year">{project.approval_year}</td>
@@ -109,7 +119,14 @@ export function ProjectsPage() {
                       </td>
                       <td data-label="Funding"><strong className="money-cell">{fmtMoney(project.funding_total_usd_m, true)}</strong></td>
                       <td data-label="Source">
-                        <a href={project.project_url} target="_blank" rel="noreferrer" title="Open ADB project page" onClick={(event) => event.stopPropagation()}>
+                        <a
+                          href={project.project_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          title="Open ADB project page"
+                          aria-label={`Open ADB page for ${project.project_title}`}
+                          onClick={(event) => event.stopPropagation()}
+                        >
                           <ExternalLink size={14} />
                         </a>
                       </td>
@@ -121,13 +138,13 @@ export function ProjectsPage() {
             <div className="table-pagination">
               <span>Showing {(activePage - 1) * PAGE_SIZE + 1}–{Math.min(activePage * PAGE_SIZE, projects.length)} of {projects.length}</span>
               <div>
-                <button onClick={() => setPage(1)} disabled={activePage === 1} title="First page"><ChevronsLeft size={15} /></button>
+                <button onClick={() => setPage(1)} disabled={activePage === 1} title="First page" aria-label="First page"><ChevronsLeft size={15} /></button>
                 {Array.from({ length: Math.min(5, maxPage) }, (_, index) => {
                   const start = Math.max(1, Math.min(activePage - 2, maxPage - 4));
                   const pageNumber = start + index;
                   return pageNumber <= maxPage ? <button key={pageNumber} className={activePage === pageNumber ? 'active' : ''} onClick={() => setPage(pageNumber)}>{pageNumber}</button> : null;
                 })}
-                <button onClick={() => setPage(maxPage)} disabled={activePage === maxPage} title="Last page"><ChevronsRight size={15} /></button>
+                <button onClick={() => setPage(maxPage)} disabled={activePage === maxPage} title="Last page" aria-label="Last page"><ChevronsRight size={15} /></button>
               </div>
             </div>
           </>

@@ -79,6 +79,7 @@ export function GlobalFilters() {
             value={filters.search}
             onChange={(event) => update('search', event.target.value)}
             placeholder="Search projects"
+            aria-label="Search projects"
           />
         </label>
         <SelectControl
@@ -96,7 +97,9 @@ export function GlobalFilters() {
         <button
           className={`filter-more ${expanded ? 'active' : ''}`}
           onClick={() => setExpanded((value) => !value)}
-          title="Show more filters"
+          title={expanded ? 'Hide additional filters' : 'Show additional filters'}
+          aria-expanded={expanded}
+          aria-controls="portfolio-secondary-filters"
         >
           <Filter size={15} />
           More
@@ -106,13 +109,14 @@ export function GlobalFilters() {
           className="icon-button reset"
           onClick={resetFilters}
           title="Reset all filters"
+          aria-label="Reset all filters"
         >
           <RotateCcw size={15} />
         </button>
       </div>
 
       {expanded && (
-        <div className="filter-secondary-row">
+        <div id="portfolio-secondary-filters" className="filter-secondary-row">
           <SelectControl
             label="Subtheme"
             value={filters.subtheme}
@@ -146,6 +150,7 @@ export function GlobalFilters() {
               <select
                 value={filters.yearStart}
                 onChange={(event) => update('yearStart', Number(event.target.value))}
+                aria-label="Approval year from"
               >
                 {options.years
                   .filter((year) => year <= filters.yearEnd)
@@ -159,6 +164,7 @@ export function GlobalFilters() {
               <select
                 value={filters.yearEnd}
                 onChange={(event) => update('yearEnd', Number(event.target.value))}
+                aria-label="Approval year to"
               >
                 {options.years
                   .filter((year) => year >= filters.yearStart)

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { usePortfolio } from '../context/PortfolioContext';
 import type { Project } from '../types';
 import {
@@ -18,6 +18,55 @@ export function ProjectDrawer({
   onClose: () => void;
 }) {
   const { data } = usePortfolio();
+  const dialogRef = useRef<HTMLElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    closeButtonRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+      if (!focusable.length) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previousFocusRef.current?.focus();
+    };
+  }, []);
+
   const kpis = useMemo(
     () =>
       data.kpis.filter(
@@ -37,19 +86,26 @@ export function ProjectDrawer({
 
   return (
     <div className="drawer-backdrop" onMouseDown={onClose}>
-      <aside className="project-drawer" onMouseDown={(event) => event.stopPropagation()}>
+      <aside
+        ref={dialogRef}
+        className="project-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="project-drawer-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
         <div className="drawer-top">
           <div>
             <span>{project.project_number}</span>
             <strong>{project.status}</strong>
           </div>
-          <button className="drawer-close" onClick={onClose}>
+          <button ref={closeButtonRef} className="drawer-close" onClick={onClose}>
             Close
           </button>
         </div>
 
         <div className="drawer-content">
-          <h2>{project.project_title}</h2>
+          <h2 id="project-drawer-title">{project.project_title}</h2>
           <div className="project-meta-grid">
             <div><span>Approval year</span><strong>{project.approval_year}</strong></div>
             <div><span>Associated funding</span><strong>{fmtMoney(project.funding_total_usd_m, true)}</strong></div>

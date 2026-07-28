@@ -191,5 +191,12 @@ export function PortfolioMap({
     source?.setData(features);
   }, [features]);
 
-  return <div ref={containerRef} className="portfolio-map" />;
+  return (
+    <div
+      ref={containerRef}
+      className="portfolio-map"
+      role="region"
+      aria-label="Interactive map of recipient countries, associated funding, and project counts"
+    />
+  );
 }

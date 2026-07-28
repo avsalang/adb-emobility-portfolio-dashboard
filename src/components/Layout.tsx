@@ -1,7 +1,8 @@
 import {
   BatteryCharging,
 } from 'lucide-react';
-import { NavLink, Outlet } from 'react-router';
+import { useEffect, useRef } from 'react';
+import { NavLink, Outlet, useLocation } from 'react-router';
 import { usePortfolio } from '../context/PortfolioContext';
 import { GlobalFilters } from './GlobalFilters';
 import { ProjectDrawer } from './ProjectDrawer';
@@ -16,12 +17,30 @@ const NAV_ITEMS = [
 
 export function Layout() {
   const { loading, error, selectedProject, setSelectedProject } = usePortfolio();
+  const location = useLocation();
+  const navRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const nav = navRef.current;
+    const activeLink = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!nav || !activeLink || nav.scrollWidth <= nav.clientWidth) return;
+
+    const frame = requestAnimationFrame(() => {
+      activeLink.scrollIntoView({
+        behavior: 'auto',
+        block: 'nearest',
+        inline: 'center',
+      });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [location.pathname]);
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div className="sidebar-title">ADB portfolio</div>
-        <nav className="sidebar-nav" aria-label="Portfolio views">
+        <nav ref={navRef} className="sidebar-nav" aria-label="Portfolio views">
           {NAV_ITEMS.map(({ to, label, end }) => (
             <NavLink
               key={to}
