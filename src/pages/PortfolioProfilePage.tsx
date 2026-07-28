@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -51,44 +51,54 @@ function DistributionPie({
   centerLabel: string;
 }) {
   const total = rows.reduce((sum, row) => sum + row.value, 0);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const activeRow = rows[activeIndex] ?? rows[0];
 
   return (
     <div className="distribution-pie">
       <div className="distribution-pie-chart">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={rows}
-              dataKey="value"
-              nameKey="name"
-              innerRadius={54}
-              outerRadius={82}
-              paddingAngle={2}
-              isAnimationActive={false}
-            >
-              {rows.map((row, index) => (
-                <Cell
-                  key={row.name}
-                  fill={DISTRIBUTION_COLORS[index % DISTRIBUTION_COLORS.length]}
-                />
-              ))}
-            </Pie>
-            <Tooltip
-              formatter={(value, name) => [
-                `${fmtNumber(Number(value))} projects`,
-                String(name),
-              ]}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="distribution-pie-center">
-          <strong>{fmtNumber(total)}</strong>
-          <span>{centerLabel}</span>
+        <div className="distribution-pie-graphic">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={rows}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={54}
+                outerRadius={82}
+                paddingAngle={2}
+                isAnimationActive={false}
+                onMouseEnter={(_, index) => setActiveIndex(index)}
+              >
+                {rows.map((row, index) => (
+                  <Cell
+                    key={row.name}
+                    fill={DISTRIBUTION_COLORS[index % DISTRIBUTION_COLORS.length]}
+                  />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="distribution-pie-center">
+            <strong>{fmtNumber(total)}</strong>
+            <span>{centerLabel}</span>
+          </div>
+        </div>
+        <div className="distribution-pie-readout" aria-live="polite">
+          {activeRow && (
+            <>
+              <span>{activeRow.name}</span>
+              <small>
+                {fmtNumber(activeRow.value)} projects ·{' '}
+                {fmtPercent(activeRow.value / Math.max(total, 1))}
+              </small>
+            </>
+          )}
         </div>
       </div>
       <div className="distribution-legend">
         {rows.map((row, index) => (
-          <div key={row.name}>
+          <div key={row.name} onMouseEnter={() => setActiveIndex(index)}>
             <i
               style={{
                 background:
