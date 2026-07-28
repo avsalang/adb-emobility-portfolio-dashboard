@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import { usePortfolio } from '../context/PortfolioContext';
 import type { Project } from '../types';
 import {
+  formatVehicleMode,
+  formatKpiValue,
   fmtMoney,
   humanize,
   shortSubtheme,
@@ -17,7 +19,13 @@ export function ProjectDrawer({
 }) {
   const { data } = usePortfolio();
   const kpis = useMemo(
-    () => data.kpis.filter((row) => row.project_number === project.project_number),
+    () =>
+      data.kpis.filter(
+        (row) =>
+          row.project_number === project.project_number &&
+          row.kpi_family !== 'no_distinct_emobility_output' &&
+          !row.indicator.startsWith('no_'),
+      ),
     [data.kpis, project.project_number],
   );
   const recipientRows = data.recipients.filter(
@@ -76,7 +84,7 @@ export function ProjectDrawer({
               </div>
               <div>
                 <dt>Vehicle or mode</dt>
-                <dd>{splitTags(project.manual_vehicle_modes).map(humanize).join(' · ') || 'Not specified'}</dd>
+                <dd>{splitTags(project.manual_vehicle_modes).map(formatVehicleMode).join(' · ') || 'Not specified'}</dd>
               </div>
               <div>
                 <dt>Value-chain stage</dt>
@@ -115,7 +123,13 @@ export function ProjectDrawer({
                       <strong>{humanize(kpi.indicator)}</strong>
                     </div>
                     {kpi.value_numeric !== null && (
-                      <b>{kpi.value_numeric.toLocaleString()} {kpi.unit}</b>
+                      <b>
+                        {formatKpiValue(
+                          kpi.value_numeric,
+                          kpi.unit,
+                          kpi.value_qualifier,
+                        )}
+                      </b>
                     )}
                   </article>
                 ))}

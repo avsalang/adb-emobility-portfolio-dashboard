@@ -4207,3 +4207,19 @@ small {
 .pie-center strong {
   font-weight: 650;
 }
+
+.section-label,
+.drawer-kpis span,
+.distribution-pie-center span,
+.pie-center span {
+  text-transform: none;
+}
+
+.ranking-list button div strong,
+.recipient-bars button > span,
+.compact-bars span {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  line-height: 1.35;
+}

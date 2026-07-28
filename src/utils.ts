@@ -51,11 +51,72 @@ export function humanize(value: string): string {
     indirect_or_potential: 'Indirect or potential',
     quantified_minimum: 'Quantified minimum',
     dedicated: 'Dedicated',
+    other: 'Other',
+    finance_market: 'Finance and market development',
+    policy_capacity: 'Policy and institutional capacity',
+    fleet_deployment: 'Vehicle and fleet deployment',
+    charging_energy_integration: 'Charging and energy integration',
+    integrated_transport_infrastructure: 'Integrated transport infrastructure',
+    digital_systems: 'Digital mobility systems',
+    depots_operations: 'Depots and operations',
+    manufacturing_battery: 'Manufacturing and batteries',
+    service_coverage: 'Service coverage',
+    knowledge_policy_or_capacity_output_only:
+      'Policy, knowledge and capacity outputs',
+    planned_or_financed_physical_output: 'Planned or financed physical outputs',
+    delivered_or_operational_physical_output:
+      'Delivered or operational physical outputs',
+    finance_input_or_eligibility_only: 'Financing or eligibility only',
+    no_distinct_or_only_potential_emobility_output:
+      'No distinct or only potential e-mobility output',
+    physical_output_in_progress: 'Physical outputs in progress',
+    ev_public_transport_detailed_design_and_procurement_support:
+      'EV public transport detailed design and procurement support',
   };
   if (replacements[value]) return replacements[value];
-  return value
+
+  const acronymReplacements: Record<string, string> = {
+    adb: 'ADB',
+    adf: 'ADF',
+    ato: 'ATO',
+    brt: 'BRT',
+    bsrdcl: 'BSRDCL',
+    carec: 'CAREC',
+    cng: 'CNG',
+    damri: 'DAMRI',
+    dfi: 'DFI',
+    ev: 'EV',
+    gcf: 'GCF',
+    gel: 'GEL',
+    inr: 'INR',
+    its: 'ITS',
+    lez: 'LEZ',
+    msme: 'MSME',
+    nmt: 'NMT',
+    ocr: 'OCR',
+    sltb: 'SLTB',
+    sme: 'SME',
+    stem: 'STEM',
+    ta: 'TA',
+    thb: 'THB',
+    ulez: 'ULEZ',
+    usd: 'USD',
+  };
+
+  let label = value
     .replace(/_/g, ' ')
-    .replace(/\b\w/g, (character) => character.toUpperCase());
+    .replace(/\be[\s-]?mobility\b/gi, 'e-mobility')
+    .replace(/\be[\s-]?bus\b/gi, 'e-bus')
+    .replace(/\be[\s-]?rickshaw\b/gi, 'e-rickshaw')
+    .replace(/\be[\s-]?motorcycle\b/gi, 'e-motorcycle')
+    .replace(/\btuktuk\b/gi, 'tuk-tuk')
+    .replace(/\bplug in\b/gi, 'plug-in')
+    .replace(/\blithium ion\b/gi, 'lithium-ion')
+    .trim()
+    .toLowerCase();
+
+  label = label.replace(/\b[a-z]+\b/g, (word) => acronymReplacements[word] ?? word);
+  return label.replace(/^[a-z]/, (character) => character.toUpperCase());
 }
 
 export function shortSubtheme(value: string): string {
@@ -74,6 +135,43 @@ export function shortSubtheme(value: string): string {
   return labels[value] ?? humanize(value);
 }
 
+export function formatVehicleMode(value: string): string {
+  const labels: Record<string, string> = {
+    electric_vehicle_unspecified: 'Electric vehicles',
+    plug_in_electric_vehicle_unspecified: 'Plug-in electric vehicles',
+    hybrid_electric_vehicle_unspecified: 'Hybrid electric vehicles',
+    electric_mobility_unspecified: 'General e-mobility',
+    e_mobility_unspecified: 'General e-mobility',
+    electric_public_transport_unspecified: 'Electric public transport',
+    electric_public_transport_vehicle_unspecified:
+      'Electric public transport vehicles',
+    electric_vehicle_based_public_transport_unspecified:
+      'Electric public transport',
+    electric_bus_unspecified: 'Electric buses',
+    electric_commercial_vehicle_unspecified: 'Electric commercial vehicles',
+    electric_distribution_vehicle_unspecified: 'Electric distribution vehicles',
+    electric_last_mile_vehicle_unspecified: 'Electric last-mile vehicles',
+    electric_training_vehicle_unspecified: 'Electric training vehicles',
+    new_energy_bus_technology_mix_unspecified: 'New-energy bus technology mix',
+    electric_vehicle_unspecified_as_pipeline_option:
+      'Electric vehicles as a pipeline option',
+    electric_vehicle_unspecified_existing_and_growing_national_fleet:
+      'Electric vehicles in the national fleet',
+    electric_vehicle_unspecified_as_distribution_grid_load:
+      'Electric vehicles as distribution-grid load',
+    electric_mobility_unspecified_as_potential_country_extension:
+      'General e-mobility as a potential country extension',
+    e_mobility_unspecified_as_fund_pipeline: 'General e-mobility fund pipeline',
+    electric_vehicle_unspecified_for_charging_network:
+      'Electric vehicles supported by the charging network',
+    low_carbon_fleet_unspecified: 'Low-carbon fleets',
+    small_commercial_vehicle_with_ev_share_unspecified:
+      'Small commercial vehicles with an EV component',
+  };
+
+  return labels[value] ?? humanize(value).replace(/\bunspecified\b/i, 'not further specified');
+}
+
 export function fmtMoney(value: number, compact = false): string {
   if (compact) {
     if (value >= 1000) return `$${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}B`;
@@ -88,6 +186,45 @@ export function fmtMoney(value: number, compact = false): string {
 
 export function fmtNumber(value: number, maximumFractionDigits = 0): string {
   return new Intl.NumberFormat('en-US', { maximumFractionDigits }).format(value);
+}
+
+export function formatKpiValue(
+  value: number,
+  unit: string,
+  qualifier = '',
+): string {
+  const number = fmtNumber(value, Number.isInteger(value) ? 0 : 3);
+  const unitFormats: Record<string, string> = {
+    usd_million: `$${number}M`,
+    gel_million: `GEL ${number} million`,
+    thb_billion: `THB ${number} billion`,
+    inr_billion: `INR ${number} billion`,
+    percent: `${number}%`,
+    percent_complete: `${number}% complete`,
+    kilometers: `${number} km`,
+    kilowatts: `${number} kW`,
+    megawatts: `${number} MW`,
+    megawatt_hours: `${number} MWh`,
+    gigawatt_hours_capacity: `${number} GWh`,
+    megavolt_amperes: `${number} MVA`,
+    million_passengers_per_year: `${number} million passengers/year`,
+    passengers_per_day: `${number} passengers/day`,
+    million_vehicles: `${number} million vehicles`,
+    person_months: `${number} person-months`,
+    not_applicable: number,
+  };
+  const valueWithUnit =
+    unitFormats[unit] ??
+    `${number} ${humanize(unit).replace(/^[A-Z]/, (character) => character.toLowerCase())}`;
+  const qualifierLabels: Record<string, string> = {
+    up_to: 'Up to',
+    approximately: 'Approximately',
+    at_least: 'At least',
+    inferred: 'Estimated',
+  };
+  const qualifierLabel = qualifierLabels[qualifier];
+
+  return qualifierLabel ? `${qualifierLabel} ${valueWithUnit}` : valueWithUnit;
 }
 
 export function fmtPercent(value: number): string {

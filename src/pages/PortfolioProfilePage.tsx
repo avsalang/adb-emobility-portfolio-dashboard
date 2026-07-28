@@ -112,7 +112,7 @@ function modeGroup(value: string): string {
   if (/ferry|boat|water_transport/.test(value)) return 'Electric water transport';
   if (/rail|metro|ropeway|cable/.test(value)) return 'Rail, metro and cable transit';
   if (/commercial|delivery|distribution|four_wheeler|car|light_vehicle/.test(value)) return 'Cars and commercial vehicles';
-  if (/unspecified|mobility/.test(value)) return 'Mode not specified';
+  if (/unspecified|mobility/.test(value)) return 'General e-mobility scope';
   return 'Other and enabling modes';
 }
 
@@ -283,7 +283,7 @@ export function PortfolioProfilePage() {
           title="Vehicle and transport modes"
           subtitle="Unique projects by grouped mode; projects may span groups."
         >
-          <DistributionPie rows={modes} centerLabel="mode tags" />
+          <DistributionPie rows={modes} centerLabel="mode assignments" />
         </Panel>
 
         <Panel

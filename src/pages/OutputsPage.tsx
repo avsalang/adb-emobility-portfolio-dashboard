@@ -40,7 +40,12 @@ export function OutputsPage() {
   );
   const quantified = filteredKpis.filter((row) => row.is_quantified);
 
-  const families = groupCount(filteredKpis, (row) => row.kpi_family).map((row) => ({
+  const families = groupCount(
+    filteredKpis.filter(
+      (row) => row.kpi_family !== 'no_distinct_emobility_output',
+    ),
+    (row) => row.kpi_family,
+  ).map((row) => ({
     ...row,
     label: humanize(row.name),
   }));
@@ -66,7 +71,7 @@ export function OutputsPage() {
       <div className="outputs-grid">
         <Panel
           title="Output record profile"
-          subtitle="Reviewed KPI records by output family."
+          subtitle="Structured records by output category."
         >
           <div className="chart-output">
             <ResponsiveContainer width="100%" height="100%">
