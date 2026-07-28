@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   Bar,
   BarChart,
@@ -43,6 +43,42 @@ const DISTRIBUTION_COLORS = [
   '#b76b7d',
 ];
 
+type DistributionDatum = {
+  name: string;
+  value: number;
+  color: string;
+  tooltipTextColor: string;
+};
+
+function DistributionTooltip({
+  active,
+  payload,
+  total,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload?: DistributionDatum }>;
+  total: number;
+}) {
+  const row = payload?.[0]?.payload;
+  if (!active || !row) return null;
+
+  return (
+    <div
+      className="distribution-tooltip"
+      style={{
+        background: row.color,
+        color: row.tooltipTextColor,
+      }}
+    >
+      <span>{row.name}</span>
+      <strong>
+        {fmtNumber(row.value)} projects ·{' '}
+        {fmtPercent(row.value / Math.max(total, 1))}
+      </strong>
+    </div>
+  );
+}
+
 function DistributionPie({
   rows,
   centerLabel,
@@ -51,8 +87,13 @@ function DistributionPie({
   centerLabel: string;
 }) {
   const total = rows.reduce((sum, row) => sum + row.value, 0);
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const activeRow = activeIndex === null ? undefined : rows[activeIndex];
+  const chartRows: DistributionDatum[] = rows.map((row, index) => ({
+    ...row,
+    color: DISTRIBUTION_COLORS[index % DISTRIBUTION_COLORS.length],
+    tooltipTextColor: [2, 4, 6].includes(index % DISTRIBUTION_COLORS.length)
+      ? '#13243a'
+      : '#ffffff',
+  }));
 
   return (
     <div className="distribution-pie">
@@ -61,23 +102,25 @@ function DistributionPie({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={rows}
+                data={chartRows}
                 dataKey="value"
                 nameKey="name"
                 innerRadius={54}
                 outerRadius={82}
                 paddingAngle={2}
                 isAnimationActive={false}
-                onMouseEnter={(_, index) => setActiveIndex(index)}
-                onMouseLeave={() => setActiveIndex(null)}
               >
-                {rows.map((row, index) => (
+                {chartRows.map((row) => (
                   <Cell
                     key={row.name}
-                    fill={DISTRIBUTION_COLORS[index % DISTRIBUTION_COLORS.length]}
+                    fill={row.color}
                   />
                 ))}
               </Pie>
+              <Tooltip
+                content={<DistributionTooltip total={total} />}
+                cursor={false}
+              />
             </PieChart>
           </ResponsiveContainer>
           <div className="distribution-pie-center">
@@ -85,29 +128,13 @@ function DistributionPie({
             <span>{centerLabel}</span>
           </div>
         </div>
-        <div className="distribution-pie-readout" aria-live="polite">
-          {activeRow && (
-            <>
-              <span>{activeRow.name}</span>
-              <small>
-                {fmtNumber(activeRow.value)} projects ·{' '}
-                {fmtPercent(activeRow.value / Math.max(total, 1))}
-              </small>
-            </>
-          )}
-        </div>
       </div>
       <div className="distribution-legend">
-        {rows.map((row, index) => (
-          <div
-            key={row.name}
-            onMouseEnter={() => setActiveIndex(index)}
-            onMouseLeave={() => setActiveIndex(null)}
-          >
+        {chartRows.map((row) => (
+          <div key={row.name}>
             <i
               style={{
-                background:
-                  DISTRIBUTION_COLORS[index % DISTRIBUTION_COLORS.length],
+                background: row.color,
               }}
             />
             <span>{row.name}</span>
