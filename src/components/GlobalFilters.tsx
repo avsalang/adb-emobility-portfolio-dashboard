@@ -55,6 +55,7 @@ export function GlobalFilters() {
   const activeFilterCount = [
     filters.search.trim() !== '',
     filters.status !== 'All',
+    filters.projectType !== 'All',
     filters.recipient !== 'All',
     filters.sector !== 'All',
     filters.subtheme !== 'All',
@@ -132,6 +133,12 @@ export function GlobalFilters() {
             value={filters.sector}
             options={options.sectors}
             onChange={(value) => update('sector', value)}
+          />
+          <SelectControl
+            label="Project type"
+            value={filters.projectType}
+            options={options.projectTypes}
+            onChange={(value) => update('projectType', value)}
           />
           <SelectControl
             label="Assistance"

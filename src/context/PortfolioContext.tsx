@@ -30,6 +30,7 @@ const EMPTY_DATA: PortfolioData = {
 const DEFAULT_FILTERS: Filters = {
   search: '',
   status: 'All',
+  projectType: 'All',
   recipient: 'All',
   sector: 'All',
   subtheme: 'All',
@@ -41,6 +42,7 @@ const DEFAULT_FILTERS: Filters = {
 
 interface FilterOptions {
   statuses: string[];
+  projectTypes: string[];
   recipients: string[];
   sectors: string[];
   subthemes: string[];
@@ -101,6 +103,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     );
     return {
       statuses: unique(data.projects.map((project) => project.status)),
+      projectTypes: unique(data.projects.map((project) => project.project_type)),
       recipients: unique(data.recipients.map((row) => row.allocated_recipient)),
       sectors: unique(data.projects.map((project) => project.sector)),
       subthemes: unique(
@@ -146,6 +149,11 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       )
       .filter(
         (project) => filters.status === 'All' || project.status === filters.status,
+      )
+      .filter(
+        (project) =>
+          filters.projectType === 'All' ||
+          project.project_type === filters.projectType,
       )
       .filter(
         (project) => filters.sector === 'All' || project.sector === filters.sector,

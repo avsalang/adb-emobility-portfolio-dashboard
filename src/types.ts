@@ -149,6 +149,7 @@ export interface PortfolioData {
 export interface Filters {
   search: string;
   status: string;
+  projectType: string;
   recipient: string;
   sector: string;
   subtheme: string;
