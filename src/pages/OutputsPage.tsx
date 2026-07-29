@@ -1,4 +1,3 @@
-import { KpiCard } from '../components/KpiCard';
 import { PageHeader, Panel } from '../components/Panel';
 import { usePortfolio } from '../context/PortfolioContext';
 import { COLORS, fmtNumber, fmtPercent, sum } from '../utils';
@@ -48,15 +47,63 @@ const OUTPUT_PROFILE_DEFINITIONS = [
   },
 ] as const;
 
-const PHYSICAL_OUTPUT_FAMILIES = new Set([
-  'fleet_deployment',
-  'charging_energy_integration',
-  'integrated_transport_infrastructure',
-  'depots_operations',
-  'manufacturing_battery',
-  'digital_systems',
-  'service_coverage',
-]);
+interface FleetBreakdownItem {
+  key: string;
+  label: string;
+  value: number;
+  color: string;
+}
+
+function FleetSummaryCard({
+  label,
+  total,
+  breakdown,
+}: {
+  label: string;
+  total: number;
+  breakdown: FleetBreakdownItem[];
+}) {
+  return (
+    <article className="kpi-card fleet-summary-card">
+      <div className="fleet-summary-total">
+        <span className="kpi-label">{label}</span>
+        <strong>{fmtNumber(total)}</strong>
+      </div>
+      <div className="fleet-composition">
+        <div
+          className="fleet-composition-stack"
+          role="img"
+          aria-label={breakdown
+            .map(
+              (row) =>
+                `${row.label}: ${fmtNumber(row.value)} vehicles, ${fmtPercent(row.value / Math.max(total, 1))}`,
+            )
+            .join('; ')}
+        >
+          {breakdown.map((row) => (
+            <i
+              key={row.key}
+              style={{
+                width: `${(row.value / Math.max(total, 1)) * 100}%`,
+                background: row.color,
+              }}
+            />
+          ))}
+        </div>
+        <div className="fleet-breakdown-list">
+          {breakdown.map((row) => (
+            <div key={row.key}>
+              <i style={{ background: row.color }} />
+              <span>{row.label}</span>
+              <strong>{fmtNumber(row.value)}</strong>
+              <small>{fmtPercent(row.value / Math.max(total, 1))}</small>
+            </div>
+          ))}
+        </div>
+      </div>
+    </article>
+  );
+}
 
 export function OutputsPage() {
   const { filteredKpis, filteredProjects } = usePortfolio();
@@ -117,22 +164,69 @@ export function OutputsPage() {
       color: COLORS.amber,
     },
   ].filter((row) => row.value > 0);
-  const pipelineFleet = sum(
-    directSafe.filter(
-      (row) =>
-        row.kpi_family === 'fleet_deployment' &&
-        row.aggregation_bucket === 'pipeline_planned_approved_or_proposed',
-    ),
-    (row) => row.value_numeric ?? 0,
+  const pipelineFleetRows = directSafe.filter(
+    (row) =>
+      row.kpi_family === 'fleet_deployment' &&
+      row.aggregation_bucket === 'pipeline_planned_approved_or_proposed',
   );
-  const quantifiedPhysicalProjects = new Set(
-    directSafe
-      .filter(
-        (row) =>
-          row.is_quantified && PHYSICAL_OUTPUT_FAMILIES.has(row.kpi_family),
-      )
-      .map((row) => row.project_number),
-  ).size;
+  const pipelineFleet = sum(pipelineFleetRows, (row) => row.value_numeric ?? 0);
+  const pipelineFleetBreakdown = [
+    {
+      key: 'buses',
+      label: 'Electric buses, including articulated',
+      value: sum(
+        pipelineFleetRows.filter((row) =>
+          [
+            'articulated_electric_bus',
+            'battery_electric_bus',
+            'electric_bus',
+          ].includes(row.vehicle_or_mode),
+        ),
+        (row) => row.value_numeric ?? 0,
+      ),
+      color: COLORS.blue,
+    },
+    {
+      key: 'three-wheelers',
+      label: 'Electric three-wheelers',
+      value: sum(
+        pipelineFleetRows.filter(
+          (row) => row.vehicle_or_mode === 'electric_three_wheeler',
+        ),
+        (row) => row.value_numeric ?? 0,
+      ),
+      color: COLORS.teal,
+    },
+    {
+      key: 'ferries',
+      label: 'Electric ferries',
+      value: sum(
+        pipelineFleetRows.filter(
+          (row) => row.vehicle_or_mode === 'electric_ferry',
+        ),
+        (row) => row.value_numeric ?? 0,
+      ),
+      color: COLORS.plum,
+    },
+    {
+      key: 'other',
+      label: 'Other pipeline vehicles',
+      value: sum(
+        pipelineFleetRows.filter(
+          (row) =>
+            ![
+              'articulated_electric_bus',
+              'battery_electric_bus',
+              'electric_bus',
+              'electric_three_wheeler',
+              'electric_ferry',
+            ].includes(row.vehicle_or_mode),
+        ),
+        (row) => row.value_numeric ?? 0,
+      ),
+      color: COLORS.amber,
+    },
+  ].filter((row) => row.value > 0);
 
   const families = (() => {
     const grouped = new Map<string, { records: number; projects: Set<string> }>();
@@ -171,48 +265,15 @@ export function OutputsPage() {
       />
 
       <div className="kpi-grid outputs-kpi-grid">
-        <article className="kpi-card delivered-fleet-card">
-          <div className="delivered-fleet-total">
-            <span className="kpi-label">Delivered fleet (vehicles)</span>
-            <strong>{fmtNumber(deliveredFleet)}</strong>
-          </div>
-          <div className="delivered-fleet-composition">
-            <div
-              className="delivered-fleet-stack"
-              role="img"
-              aria-label={deliveredFleetBreakdown
-                .map(
-                  (row) =>
-                    `${row.label}: ${fmtNumber(row.value)} vehicles, ${fmtPercent(row.value / Math.max(deliveredFleet, 1))}`,
-                )
-                .join('; ')}
-            >
-              {deliveredFleetBreakdown.map((row) => (
-                <i
-                  key={row.key}
-                  style={{
-                    width: `${(row.value / Math.max(deliveredFleet, 1)) * 100}%`,
-                    background: row.color,
-                  }}
-                />
-              ))}
-            </div>
-            <div className="delivered-fleet-list">
-              {deliveredFleetBreakdown.map((row) => (
-                <div key={row.key}>
-                  <i style={{ background: row.color }} />
-                  <span>{row.label}</span>
-                  <strong>{fmtNumber(row.value)}</strong>
-                  <small>{fmtPercent(row.value / Math.max(deliveredFleet, 1))}</small>
-                </div>
-              ))}
-            </div>
-          </div>
-        </article>
-        <KpiCard label="Fleet pipeline (vehicles)" value={fmtNumber(pipelineFleet)} />
-        <KpiCard
-          label="Projects with quantified physical outputs"
-          value={fmtNumber(quantifiedPhysicalProjects)}
+        <FleetSummaryCard
+          label="Delivered fleet (vehicles)"
+          total={deliveredFleet}
+          breakdown={deliveredFleetBreakdown}
+        />
+        <FleetSummaryCard
+          label="Fleet pipeline (vehicles)"
+          total={pipelineFleet}
+          breakdown={pipelineFleetBreakdown}
         />
       </div>
 
