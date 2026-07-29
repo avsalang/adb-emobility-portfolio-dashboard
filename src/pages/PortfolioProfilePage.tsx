@@ -5,11 +5,17 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import {
+  Bar,
+  BarChart,
   Cell,
+  CartesianGrid,
+  LabelList,
   Pie,
   PieChart,
   ResponsiveContainer,
   Tooltip,
+  XAxis,
+  YAxis,
 } from 'recharts';
 import { PageHeader, Panel } from '../components/Panel';
 import { usePortfolio } from '../context/PortfolioContext';
@@ -41,12 +47,36 @@ const SECTOR_COLORS: Record<string, string> = {
 };
 
 const VALUE_CHAIN_STAGES = [
-  { key: 'preparation', label: 'Research and preparation' },
-  { key: 'production', label: 'Production and supply' },
-  { key: 'vehicle', label: 'Vehicle acquisition' },
-  { key: 'infrastructure', label: 'Infrastructure deployment' },
-  { key: 'operations', label: 'Operations and maintenance' },
-  { key: 'circularity', label: 'End-of-life and circularity' },
+  {
+    key: 'preparation',
+    label: 'Research and preparation',
+    axisLines: ['Research and', 'preparation'],
+  },
+  {
+    key: 'production',
+    label: 'Production and supply',
+    axisLines: ['Production and', 'supply'],
+  },
+  {
+    key: 'vehicle',
+    label: 'Vehicle acquisition',
+    axisLines: ['Vehicle', 'acquisition'],
+  },
+  {
+    key: 'infrastructure',
+    label: 'Infrastructure deployment',
+    axisLines: ['Infrastructure', 'deployment'],
+  },
+  {
+    key: 'operations',
+    label: 'Operations and maintenance',
+    axisLines: ['Operations and', 'maintenance'],
+  },
+  {
+    key: 'circularity',
+    label: 'End-of-life and circularity',
+    axisLines: ['End-of-life and', 'circularity'],
+  },
 ] as const;
 
 const CROSS_CUTTING_TOPICS = [
@@ -372,7 +402,48 @@ function isValueChainEnabler(tag: string) {
   );
 }
 
-function ValueChainBand({
+function ValueChainAxisTick({
+  x = 0,
+  y = 0,
+  payload,
+}: {
+  x?: number;
+  y?: number;
+  payload?: { value?: string };
+}) {
+  const index = VALUE_CHAIN_STAGES.findIndex(
+    (stage) => stage.key === payload?.value,
+  );
+  const stage = VALUE_CHAIN_STAGES[index];
+  if (!stage) return null;
+
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        className="value-chain-axis-full"
+        textAnchor="middle"
+        fill="#475569"
+      >
+        {stage.axisLines.map((line, lineIndex) => (
+          <tspan key={line} x="0" dy={lineIndex === 0 ? 20 : 19}>
+            {line}
+          </tspan>
+        ))}
+      </text>
+      <text
+        className="value-chain-axis-short"
+        x="0"
+        y="22"
+        textAnchor="middle"
+        fill="#475569"
+      >
+        {String(index + 1).padStart(2, '0')}
+      </text>
+    </g>
+  );
+}
+
+function ValueChainChart({
   stages,
   enablerCount,
   denominator,
@@ -381,39 +452,69 @@ function ValueChainBand({
   enablerCount: number;
   denominator: number;
 }) {
-  const maximum = Math.max(...stages.map((stage) => stage.value), 1);
+  const maximum = Math.max(...stages.map((stage) => stage.value), 1) + 7;
   return (
     <div className="value-chain-profile">
-      <div className="value-chain-band-scroll">
-        <div className="value-chain-band">
-          {stages.map((stage, index) => {
-            const strength = 0.14 + (stage.value / maximum) * 0.86;
-            const lightText = strength > 0.56;
-            return (
-              <div
-                key={stage.key}
-                role="img"
-                aria-label={`${stage.label}: ${stage.value} projects, ${fmtPercent(
-                  stage.value / Math.max(denominator, 1),
-                )}`}
-                style={{
-                  background: `rgba(23, 105, 170, ${strength})`,
-                  color: lightText ? '#ffffff' : '#0d2742',
-                }}
-              >
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                <strong>{stage.label}</strong>
-                <p>
-                  <b>{fmtNumber(stage.value)}</b>
-                  <small>
-                    projects ·{' '}
-                    {fmtPercent(stage.value / Math.max(denominator, 1))}
-                  </small>
-                </p>
-              </div>
-            );
-          })}
-        </div>
+      <div className="value-chain-chart">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={stages}
+            margin={{ top: 24, right: 12, bottom: 8, left: 0 }}
+          >
+            <CartesianGrid stroke="#e8eef4" vertical={false} />
+            <XAxis
+              dataKey="key"
+              axisLine={false}
+              tickLine={false}
+              interval={0}
+              height={62}
+              tick={<ValueChainAxisTick />}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              allowDecimals={false}
+              domain={[0, maximum]}
+              tick={{ fontSize: 16, fill: '#64748b' }}
+              width={42}
+            />
+            <Tooltip
+              cursor={{ fill: '#f5f8fb' }}
+              labelFormatter={(key) =>
+                stages.find((stage) => stage.key === key)?.label ?? String(key)
+              }
+              formatter={(value) => [
+                `${fmtNumber(Number(value))} projects (${fmtPercent(
+                  Number(value) / Math.max(denominator, 1),
+                )})`,
+                'Project coverage',
+              ]}
+            />
+            <Bar
+              dataKey="value"
+              fill={COLORS.blue}
+              maxBarSize={78}
+              radius={[3, 3, 0, 0]}
+            >
+              <LabelList
+                dataKey="value"
+                position="top"
+                formatter={(value: number) => fmtNumber(value)}
+                fill="#0f172a"
+                fontSize={16}
+                fontWeight={650}
+              />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="value-chain-mobile-key">
+        {stages.map((stage, index) => (
+          <div key={stage.key}>
+            <b>{String(index + 1).padStart(2, '0')}</b>
+            <span>{stage.label}</span>
+          </div>
+        ))}
       </div>
       <div className="value-chain-enabler">
         <span>Market and institutional enablers</span>
@@ -724,7 +825,7 @@ export function PortfolioProfilePage() {
         title="Value-chain stages"
         subtitle="Project coverage across the e-mobility value chain."
       >
-        <ValueChainBand
+        <ValueChainChart
           stages={valueChain.stages}
           enablerCount={valueChain.enablerCount}
           denominator={filteredProjects.length}

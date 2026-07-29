@@ -4793,63 +4793,18 @@ small {
   gap: 14px;
 }
 
-.value-chain-band-scroll {
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--slate-300) transparent;
+.value-chain-chart {
+  height: 330px;
 }
 
-.value-chain-band {
-  min-width: 900px;
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  overflow: hidden;
-  border: 1px solid var(--slate-200);
-  border-radius: 8px;
+.value-chain-axis-full,
+.value-chain-axis-short {
+  font-size: 12pt;
 }
 
-.value-chain-band > div {
-  min-width: 0;
-  min-height: 150px;
-  display: flex;
-  flex-direction: column;
-  padding: 14px 15px;
-  border-right: 2px solid rgba(255, 255, 255, 0.82);
-}
-
-.value-chain-band > div:last-child {
-  border-right: 0;
-}
-
-.value-chain-band span {
-  opacity: 0.74;
-  font-variant-numeric: tabular-nums;
-}
-
-.value-chain-band strong {
-  margin-top: 12px;
-  line-height: 1.28;
-}
-
-.value-chain-band p {
-  margin: auto 0 0;
-}
-
-.value-chain-band p b,
-.value-chain-band p small {
-  display: block;
-}
-
-.value-chain-band p b {
-  font-size: 24px;
-  font-variant-numeric: tabular-nums;
-}
-
-.value-chain-band p small {
-  margin-top: 3px;
-  color: inherit;
-  opacity: 0.82;
+.value-chain-axis-short,
+.value-chain-mobile-key {
+  display: none;
 }
 
 .value-chain-enabler {
@@ -4951,8 +4906,48 @@ small {
     min-height: 540px;
   }
 
-  .value-chain-band {
-    min-width: 780px;
+  .value-chain-chart {
+    height: 310px;
+  }
+
+  .value-chain-axis-full {
+    display: none;
+  }
+
+  .value-chain-axis-short {
+    display: block;
+  }
+
+  .value-chain-mobile-key {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 14px;
+    border-top: 1px solid var(--slate-200);
+  }
+
+  .value-chain-mobile-key > div {
+    min-height: 48px;
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+    border-bottom: 1px solid var(--slate-100);
+  }
+
+  .value-chain-mobile-key b,
+  .value-chain-mobile-key span {
+    font-size: 12pt;
+  }
+
+  .value-chain-mobile-key b {
+    color: var(--blue);
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .value-chain-mobile-key span {
+    color: var(--slate-600);
+    line-height: 1.3;
   }
 
   .value-chain-enabler {
