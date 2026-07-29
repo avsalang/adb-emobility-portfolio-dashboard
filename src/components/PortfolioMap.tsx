@@ -1,5 +1,6 @@
-import maplibregl, { type GeoJSONSource } from 'maplibre-gl';
+import maplibregl, { type GeoJSONSource, LngLatBounds } from 'maplibre-gl';
 import { useEffect, useMemo, useRef } from 'react';
+import { financeExplorerMapStyle } from '../map/financeExplorerMapStyle';
 
 const COUNTRY_COORDINATES: Record<string, [number, number]> = {
   Armenia: [44.5, 40.1],
@@ -35,7 +36,28 @@ const COUNTRY_COORDINATES: Record<string, [number, number]> = {
   'Viet Nam': [108.3, 15.9],
 };
 
-const ATO_MAP_STYLE = `${import.meta.env.BASE_URL}map-style.json`;
+function normalizeAsiaPacificLng(lng: number) {
+  return lng < -25 ? lng + 360 : lng;
+}
+
+function hideBoundaryLayers(map: maplibregl.Map) {
+  map.getStyle().layers?.forEach((layer) => {
+    const id = layer.id.toLowerCase();
+    const sourceLayer =
+      (layer as { ['source-layer']?: string })['source-layer']?.toLowerCase() ??
+      '';
+    if (
+      id.includes('boundary') ||
+      id.includes('admin') ||
+      id.includes('border') ||
+      sourceLayer.includes('boundary')
+    ) {
+      if (map.getLayer(layer.id)) {
+        map.setLayoutProperty(layer.id, 'visibility', 'none');
+      }
+    }
+  });
+}
 
 export interface MapCountry {
   name: string;
@@ -64,7 +86,10 @@ export function PortfolioMap({
           type: 'Feature' as const,
           geometry: {
             type: 'Point' as const,
-            coordinates: COUNTRY_COORDINATES[country.name],
+            coordinates: [
+              normalizeAsiaPacificLng(COUNTRY_COORDINATES[country.name][0]),
+              COUNTRY_COORDINATES[country.name][1],
+            ],
           },
           properties: {
             name: country.name,
@@ -85,11 +110,10 @@ export function PortfolioMap({
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: ATO_MAP_STYLE,
-      center: [101, 20],
-      zoom: 2.25,
-      minZoom: 1.25,
-      attributionControl: false,
+      style: JSON.parse(JSON.stringify(financeExplorerMapStyle)),
+      center: [115, 13],
+      zoom: 2.15,
+      attributionControl: {},
     });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     mapRef.current = map;
@@ -101,6 +125,7 @@ export function PortfolioMap({
     });
 
     map.on('load', () => {
+      hideBoundaryLayers(map);
       map.addSource('recipient-funding', {
         type: 'geojson',
         data: features,
@@ -155,6 +180,14 @@ export function PortfolioMap({
         },
       });
 
+      if (features.features.length) {
+        const bounds = new LngLatBounds();
+        features.features.forEach((feature) => {
+          bounds.extend(feature.geometry.coordinates as [number, number]);
+        });
+        map.fitBounds(bounds, { padding: 24, maxZoom: 5, duration: 600 });
+      }
+
       map.on('mouseenter', 'recipient-points', (event) => {
         map.getCanvas().style.cursor = 'pointer';
         const feature = event.features?.[0];
@@ -185,27 +218,26 @@ export function PortfolioMap({
   }, []);
 
   useEffect(() => {
-    const source = mapRef.current?.getSource('recipient-funding') as
+    const map = mapRef.current;
+    const source = map?.getSource('recipient-funding') as
       | GeoJSONSource
       | undefined;
     source?.setData(features);
+    if (!map || !source || !features.features.length) return;
+
+    const bounds = new LngLatBounds();
+    features.features.forEach((feature) => {
+      bounds.extend(feature.geometry.coordinates as [number, number]);
+    });
+    map.fitBounds(bounds, { padding: 24, maxZoom: 5, duration: 600 });
   }, [features]);
 
   return (
-    <div className="portfolio-map-shell">
-      <div
-        ref={containerRef}
-        className="portfolio-map"
-        role="region"
-        aria-label="Interactive map of recipient countries, associated funding, and project counts"
-      />
-      <div className="portfolio-map-attribution">
-        <a href="https://openfreemap.org/" target="_blank" rel="noreferrer">OpenFreeMap</a>
-        <span>·</span>
-        <a href="https://openmaptiles.org/" target="_blank" rel="noreferrer">OpenMapTiles</a>
-        <span>·</span>
-        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>
-      </div>
-    </div>
+    <div
+      ref={containerRef}
+      className="portfolio-map"
+      role="region"
+      aria-label="Interactive map of recipient countries, associated funding, and project counts"
+    />
   );
 }
