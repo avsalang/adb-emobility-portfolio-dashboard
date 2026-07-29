@@ -64,14 +64,59 @@ export function OutputsPage() {
   const directSafe = filteredKpis.filter(
     (row) => row.emobility_attribution === 'direct' && row.is_safe_to_aggregate,
   );
-  const deliveredFleet = sum(
-    directSafe.filter(
-      (row) =>
-        row.kpi_family === 'fleet_deployment' &&
-        row.aggregation_bucket === 'actual_delivered_completed_or_operational',
-    ),
-    (row) => row.value_numeric ?? 0,
+  const deliveredFleetRows = directSafe.filter(
+    (row) =>
+      row.kpi_family === 'fleet_deployment' &&
+      row.aggregation_bucket === 'actual_delivered_completed_or_operational',
   );
+  const deliveredFleet = sum(deliveredFleetRows, (row) => row.value_numeric ?? 0);
+  const deliveredFleetBreakdown = [
+    {
+      key: 'three-wheelers',
+      label: 'Electric three-wheelers',
+      value: sum(
+        deliveredFleetRows.filter(
+          (row) => row.vehicle_or_mode === 'electric_three_wheeler',
+        ),
+        (row) => row.value_numeric ?? 0,
+      ),
+      color: COLORS.teal,
+    },
+    {
+      key: 'buses',
+      label: 'Electric, hybrid and trolleybuses',
+      value: sum(
+        deliveredFleetRows.filter((row) =>
+          [
+            'battery_electric_bus',
+            'electric_bus',
+            'electric_trolleybus',
+            'plug_in_hybrid_electric_bus',
+          ].includes(row.vehicle_or_mode),
+        ),
+        (row) => row.value_numeric ?? 0,
+      ),
+      color: COLORS.blue,
+    },
+    {
+      key: 'other',
+      label: 'Other electric and hybrid vehicles',
+      value: sum(
+        deliveredFleetRows.filter(
+          (row) =>
+            row.vehicle_or_mode !== 'electric_three_wheeler' &&
+            ![
+              'battery_electric_bus',
+              'electric_bus',
+              'electric_trolleybus',
+              'plug_in_hybrid_electric_bus',
+            ].includes(row.vehicle_or_mode),
+        ),
+        (row) => row.value_numeric ?? 0,
+      ),
+      color: COLORS.amber,
+    },
+  ].filter((row) => row.value > 0);
   const pipelineFleet = sum(
     directSafe.filter(
       (row) =>
@@ -80,7 +125,6 @@ export function OutputsPage() {
     ),
     (row) => row.value_numeric ?? 0,
   );
-  const quantified = filteredKpis.filter((row) => row.is_quantified);
   const quantifiedPhysicalProjects = new Set(
     directSafe
       .filter(
@@ -126,10 +170,46 @@ export function OutputsPage() {
         title="Outputs and KPIs"
       />
 
-      <div className="kpi-grid">
-        <KpiCard label="Delivered fleet (vehicles)" value={fmtNumber(deliveredFleet)} />
+      <div className="kpi-grid outputs-kpi-grid">
+        <article className="kpi-card delivered-fleet-card">
+          <div className="delivered-fleet-total">
+            <span className="kpi-label">Delivered fleet (vehicles)</span>
+            <strong>{fmtNumber(deliveredFleet)}</strong>
+          </div>
+          <div className="delivered-fleet-composition">
+            <div
+              className="delivered-fleet-stack"
+              role="img"
+              aria-label={deliveredFleetBreakdown
+                .map(
+                  (row) =>
+                    `${row.label}: ${fmtNumber(row.value)} vehicles, ${fmtPercent(row.value / Math.max(deliveredFleet, 1))}`,
+                )
+                .join('; ')}
+            >
+              {deliveredFleetBreakdown.map((row) => (
+                <i
+                  key={row.key}
+                  style={{
+                    width: `${(row.value / Math.max(deliveredFleet, 1)) * 100}%`,
+                    background: row.color,
+                  }}
+                />
+              ))}
+            </div>
+            <div className="delivered-fleet-list">
+              {deliveredFleetBreakdown.map((row) => (
+                <div key={row.key}>
+                  <i style={{ background: row.color }} />
+                  <span>{row.label}</span>
+                  <strong>{fmtNumber(row.value)}</strong>
+                  <small>{fmtPercent(row.value / Math.max(deliveredFleet, 1))}</small>
+                </div>
+              ))}
+            </div>
+          </div>
+        </article>
         <KpiCard label="Fleet pipeline (vehicles)" value={fmtNumber(pipelineFleet)} />
-        <KpiCard label="Quantified KPI records" value={fmtNumber(quantified.length)} />
         <KpiCard
           label="Projects with quantified physical outputs"
           value={fmtNumber(quantifiedPhysicalProjects)}

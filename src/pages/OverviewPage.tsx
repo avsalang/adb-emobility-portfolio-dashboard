@@ -11,8 +11,9 @@ import {
 } from 'recharts';
 import { KpiCard } from '../components/KpiCard';
 import { PageHeader, Panel } from '../components/Panel';
-import { PortfolioMap, type MapCountry } from '../components/PortfolioMap';
+import { PortfolioMap } from '../components/PortfolioMap';
 import { usePortfolio } from '../context/PortfolioContext';
+import { buildProjectMapLocations } from '../map/projectLocations';
 import {
   COLORS,
   STATUS_COLORS,
@@ -78,27 +79,10 @@ export function OverviewPage() {
     );
   }, [filteredProjects, filters.yearEnd, filters.yearStart]);
 
-  const mapCountries = useMemo<MapCountry[]>(() => {
-    const grouped = new Map<string, { funding: number; projects: Set<string> }>();
-    filteredRecipients
-      .filter((row) => row.recipient_type === 'Country')
-      .forEach((row) => {
-        const current = grouped.get(row.allocated_recipient) ?? {
-          funding: 0,
-          projects: new Set<string>(),
-        };
-        current.funding += row.funding_usd_m;
-        current.projects.add(row.project_number);
-        grouped.set(row.allocated_recipient, current);
-      });
-    return [...grouped.entries()]
-      .map(([name, value]) => ({
-        name,
-        funding: value.funding,
-        projects: value.projects.size,
-      }))
-      .sort((a, b) => b.funding - a.funding);
-  }, [filteredRecipients]);
+  const projectLocations = useMemo(
+    () => buildProjectMapLocations(filteredProjects),
+    [filteredProjects],
+  );
 
   const statusMix = useMemo(
     () =>
@@ -109,16 +93,6 @@ export function OverviewPage() {
       })),
     [filteredProjects],
   );
-  const regionalAllocation = useMemo(() => {
-    const rows = filteredRecipients.filter(
-      (row) => row.recipient_type !== 'Country',
-    );
-    return {
-      funding: sum(rows, (row) => row.funding_usd_m),
-      projects: new Set(rows.map((row) => row.project_number)).size,
-    };
-  }, [filteredRecipients]);
-
   return (
     <div className="page">
       <PageHeader
@@ -250,56 +224,18 @@ export function OverviewPage() {
         </Panel>
       </div>
 
-      <div className="map-overview-grid">
+      <div className="map-overview-grid map-overview-grid-full">
         <Panel
           className="map-panel"
           title="Geographic footprint"
-          subtitle="Associated funding by recipient economy."
+          subtitle="Reported project activity locations, with economy-level fallbacks where needed."
         >
           <PortfolioMap
-            countries={mapCountries}
-            onSelect={(recipient) =>
-              setFilters((current) => ({ ...current, recipient }))
+            locations={projectLocations}
+            onSelectProject={(projectNumber) =>
+              setFilters((current) => ({ ...current, search: projectNumber }))
             }
           />
-        </Panel>
-
-        <Panel
-          title="Leading country allocations"
-          subtitle="Largest country allocations in the current selection."
-        >
-          <div className="ranking-list">
-            {mapCountries.slice(0, 8).map((country, index) => (
-              <button
-                key={country.name}
-                onClick={() =>
-                  setFilters((current) => ({ ...current, recipient: country.name }))
-                }
-              >
-                <b>{String(index + 1).padStart(2, '0')}</b>
-                <div>
-                  <strong>{country.name}</strong>
-                  <span>{country.projects} project{country.projects === 1 ? '' : 's'}</span>
-                </div>
-                <em>{fmtMoney(country.funding, true)}</em>
-                <i>
-                  <span style={{ width: `${(country.funding / Math.max(mapCountries[0]?.funding ?? 1, 1)) * 100}%` }} />
-                </i>
-              </button>
-            ))}
-          </div>
-          {regionalAllocation.projects > 0 && (
-            <div className="regional-allocation-summary">
-              <div>
-                <span>Regional allocations</span>
-                <small>
-                  {regionalAllocation.projects} project
-                  {regionalAllocation.projects === 1 ? '' : 's'}
-                </small>
-              </div>
-              <strong>{fmtMoney(regionalAllocation.funding, true)}</strong>
-            </div>
-          )}
         </Panel>
       </div>
 

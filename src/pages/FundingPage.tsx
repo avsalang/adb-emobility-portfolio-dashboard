@@ -17,11 +17,12 @@ import {
   COLORS,
   fmtMoney,
   fmtNumber,
-  fmtPercent,
   sum,
 } from '../utils';
 
 type Metric = 'funding' | 'projects';
+
+const ASSISTANCE_TYPES = ['Loan', 'Grant', 'TA'] as const;
 
 export function FundingPage() {
   const {
@@ -37,25 +38,40 @@ export function FundingPage() {
   const sovereign = filteredProjects.filter((project) => project.project_type === 'Sovereign');
   const nonsovereign = filteredProjects.filter((project) => project.project_type === 'Nonsovereign');
 
-  const modalityByYear = useMemo(() => {
-    const grouped = new Map<number, Record<string, number>>();
+  const assistanceByYear = useMemo(() => {
+    const grouped = new Map<
+      number,
+      Map<string, { funding: number; projectIds: Set<string> }>
+    >();
     filteredModalities.forEach((row) => {
-      const current = grouped.get(row.approval_year) ?? {
-        year: row.approval_year,
-        Loan: 0,
-        Grant: 0,
-        TA: 0,
+      const year = grouped.get(row.approval_year) ?? new Map();
+      const current = year.get(row.generalized_assistance_type) ?? {
+        funding: 0,
+        projectIds: new Set<string>(),
       };
-      current[row.generalized_assistance_type] =
-        (current[row.generalized_assistance_type] ?? 0) +
-        (metric === 'funding' ? row.funding_usd_m : 1);
-      grouped.set(row.approval_year, current);
+      current.funding += row.funding_usd_m;
+      current.projectIds.add(row.project_number);
+      year.set(row.generalized_assistance_type, current);
+      grouped.set(row.approval_year, year);
     });
     return Array.from(
       { length: filters.yearEnd - filters.yearStart + 1 },
       (_, index) => {
         const year = filters.yearStart + index;
-        return grouped.get(year) ?? { year, Loan: 0, Grant: 0, TA: 0 };
+        return {
+          year,
+          ...Object.fromEntries(
+            ASSISTANCE_TYPES.map((name) => {
+              const cell = grouped.get(year)?.get(name);
+              return [
+                name,
+                metric === 'funding'
+                  ? cell?.funding ?? 0
+                  : cell?.projectIds.size ?? 0,
+              ];
+            }),
+          ),
+        };
       },
     );
   }, [filteredModalities, filters.yearEnd, filters.yearStart, metric]);
@@ -112,19 +128,6 @@ export function FundingPage() {
       .sort((a, b) => b[metric] - a[metric]);
   }, [filteredRecipients, metric]);
 
-  const topFiveShare = useMemo(() => {
-    if (metric === 'funding') {
-      return (
-        sum(recipients.slice(0, 5), (row) => row.funding) /
-        Math.max(sum(recipients, (row) => row.funding), 1)
-      );
-    }
-    const projectIds = new Set(
-      recipients.slice(0, 5).flatMap((row) => [...row.projectIds]),
-    );
-    return projectIds.size / Math.max(filteredProjects.length, 1);
-  }, [filteredProjects.length, metric, recipients]);
-
   const portfolioValue =
     metric === 'funding' ? fmtMoney(funding, true) : fmtNumber(filteredProjects.length);
   const sovereignValue =
@@ -160,7 +163,7 @@ export function FundingPage() {
         }
       />
 
-      <div className="kpi-grid">
+      <div className="kpi-grid kpi-grid-three">
         <KpiCard
           label={metric === 'funding' ? 'Portfolio envelope' : 'Portfolio projects'}
           value={portfolioValue}
@@ -172,10 +175,6 @@ export function FundingPage() {
         <KpiCard
           label={metric === 'funding' ? 'Nonsovereign operations' : 'Nonsovereign projects'}
           value={nonsovereignValue}
-        />
-        <KpiCard
-          label={metric === 'funding' ? 'Top-five funding concentration' : 'Top-five project coverage'}
-          value={fmtPercent(topFiveShare)}
         />
       </div>
 
@@ -226,33 +225,63 @@ export function FundingPage() {
           subtitle={
             metric === 'funding'
               ? 'Funding by assistance type and recorded approval year.'
-              : 'Project coverage by assistance type; types may overlap.'
+              : 'Project assignments by assistance type; projects may span types.'
           }
         >
           <div className="chart-xl">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={modalityByYear} margin={{ top: 12, right: 8, bottom: 0, left: 0 }}>
+              <BarChart
+                data={assistanceByYear}
+                margin={{ top: 12, right: 8, bottom: 0, left: 0 }}
+              >
                 <CartesianGrid stroke="#e8eef4" vertical={false} />
-                <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fontSize: 16 }} />
-                <YAxis tickFormatter={(value) => metric === 'funding' ? `$${value >= 1000 ? `${(value / 1000).toFixed(1)}B` : `${value}M`}` : value} axisLine={false} tickLine={false} tick={{ fontSize: 16 }} width={58} />
+                <XAxis
+                  dataKey="year"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 16 }}
+                />
+                <YAxis
+                  tickFormatter={(value) =>
+                    metric === 'funding'
+                      ? `${
+                          value >= 1000
+                            ? `$${(value / 1000).toFixed(1)}B`
+                            : `$${value}M`
+                        }`
+                      : value
+                  }
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 16 }}
+                  width={58}
+                />
                 <Tooltip
                   formatter={(value, name) => [
                     metric === 'funding'
                       ? fmtMoney(Number(value), true)
-                      : `${fmtNumber(Number(value))} projects`,
+                      : `${fmtNumber(Number(value))} project${
+                          Number(value) === 1 ? '' : 's'
+                        }`,
                     String(name),
                   ]}
                   labelFormatter={(year) => `Approval year ${year}`}
                 />
-                <Legend iconType="circle" iconSize={8} />
-                {['Loan', 'Grant', 'TA'].map((name) => (
+                <Legend
+                  iconType="circle"
+                  iconSize={8}
+                  formatter={(value) =>
+                    value === 'TA' ? 'Technical assistance' : value
+                  }
+                />
+                {ASSISTANCE_TYPES.map((name) => (
                   <Bar
                     key={name}
                     dataKey={name}
-                    stackId={metric === 'funding' ? 'a' : undefined}
-                    barSize={metric === 'projects' ? 5 : undefined}
+                    stackId="assistance"
                     fill={ASSISTANCE_COLORS[name]}
-                    radius={metric === 'projects' ? [3, 3, 0, 0] : undefined}
+                    maxBarSize={28}
+                    radius={[0, 0, 0, 0]}
                   />
                 ))}
               </BarChart>
