@@ -207,13 +207,11 @@ function CoverageBars({
   denominator,
   formatter = (value) => value,
   color = COLORS.blue,
-  onSelect,
 }: {
   rows: { name: string; value: number }[];
   denominator: number;
   formatter?: (value: string) => string;
   color?: string;
-  onSelect?: (value: string) => void;
 }) {
   const rowContent = (row: { name: string; value: number }) => (
     <>
@@ -236,19 +234,9 @@ function CoverageBars({
 
   return (
     <div className="coverage-bars">
-      {rows.map((row) =>
-        onSelect ? (
-          <button
-            type="button"
-            key={row.name}
-            onClick={() => onSelect(row.name)}
-          >
-            {rowContent(row)}
-          </button>
-        ) : (
-          <div key={row.name}>{rowContent(row)}</div>
-        ),
-      )}
+      {rows.map((row) => (
+        <div key={row.name}>{rowContent(row)}</div>
+      ))}
     </div>
   );
 }
@@ -292,11 +280,9 @@ function DotPlot({
 function SectorDonut({
   rows,
   denominator,
-  onSelect,
 }: {
   rows: DistributionRow[];
   denominator: number;
-  onSelect: (sector: string) => void;
 }) {
   return (
     <div className="distribution-pie sector-distribution">
@@ -336,16 +322,12 @@ function SectorDonut({
       </div>
       <div className="distribution-legend">
         {rows.map((row) => (
-          <button
-            type="button"
-            key={row.name}
-            onClick={() => onSelect(row.name)}
-          >
+          <div key={row.name}>
             <i style={{ background: row.color }} />
             <span>{row.name}</span>
             <strong>{fmtNumber(row.value)}</strong>
             <small>{fmtPercent(row.value / Math.max(denominator, 1))}</small>
-          </button>
+          </div>
         ))}
       </div>
     </div>
@@ -611,7 +593,7 @@ function PriorityCloud({
 }
 
 export function PortfolioProfilePage() {
-  const { filteredProjects, filteredSubthemes, setFilters } = usePortfolio();
+  const { filteredProjects, filteredSubthemes } = usePortfolio();
 
   const subthemes = useMemo(() => {
     const grouped = new Map<string, Set<string>>();
@@ -723,9 +705,6 @@ export function PortfolioProfilePage() {
             }))}
             denominator={filteredProjects.length}
             formatter={shortSubtheme}
-            onSelect={(subtheme) =>
-              setFilters((current) => ({ ...current, subtheme }))
-            }
           />
         </Panel>
 
@@ -773,16 +752,7 @@ export function PortfolioProfilePage() {
             </div>
             <div className="legend-rows">
               {attribution.map((row) => (
-                <button
-                  type="button"
-                  key={row.name}
-                  onClick={() =>
-                    setFilters((current) => ({
-                      ...current,
-                      attribution: row.name,
-                    }))
-                  }
-                >
+                <div key={row.name}>
                   <i style={{ background: row.color }} />
                   <span>{humanize(row.name)}</span>
                   <strong>{row.value}</strong>
@@ -791,7 +761,7 @@ export function PortfolioProfilePage() {
                       row.value / Math.max(filteredProjects.length, 1),
                     )}
                   </small>
-                </button>
+                </div>
               ))}
             </div>
           </div>
@@ -813,9 +783,6 @@ export function PortfolioProfilePage() {
           <SectorDonut
             rows={sectors}
             denominator={filteredProjects.length}
-            onSelect={(sector) =>
-              setFilters((current) => ({ ...current, sector }))
-            }
           />
         </Panel>
       </div>

@@ -207,17 +207,12 @@ export function OverviewPage() {
             </div>
             <div className="status-list">
               {statusMix.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() =>
-                    setFilters((current) => ({ ...current, status: item.name }))
-                  }
-                >
+                <div key={item.name}>
                   <i style={{ background: item.color }} />
                   <span>{item.name}</span>
                   <strong>{item.value}</strong>
                   <small>{fmtPercent(item.value / Math.max(filteredProjects.length, 1))}</small>
-                </button>
+                </div>
               ))}
             </div>
           </div>
@@ -233,7 +228,7 @@ export function OverviewPage() {
           <PortfolioMap
             locations={projectLocations}
             onSelectProject={(projectNumber) =>
-              setFilters((current) => ({ ...current, search: projectNumber }))
+              setFilters((current) => ({ ...current, mapProject: projectNumber }))
             }
           />
         </Panel>

@@ -30,7 +30,6 @@ export function FundingPage() {
     filteredRecipients,
     filteredModalities,
     filters,
-    setFilters,
   } = usePortfolio();
   const [metric, setMetric] = useState<Metric>('funding');
 
@@ -299,12 +298,12 @@ export function FundingPage() {
             const value = recipient[metric];
             const max = recipients[0]?.[metric] || 1;
             return (
-              <button key={recipient.name} onClick={() => setFilters((current) => ({ ...current, recipient: recipient.name }))}>
+              <div key={recipient.name}>
                 <b>{index + 1}</b>
                 <span>{recipient.name}</span>
                 <i><em style={{ width: `${(value / max) * 100}%` }} /></i>
                 <strong>{metric === 'funding' ? fmtMoney(value, true) : fmtNumber(value)}</strong>
-              </button>
+              </div>
             );
           })}
         </div>

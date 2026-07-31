@@ -16,7 +16,7 @@ import type {
   RecipientAllocation,
   SubthemeRecord,
 } from '../types';
-import { projectSearchText, splitTags } from '../utils';
+import { splitTags } from '../utils';
 
 const EMPTY_DATA: PortfolioData = {
   projects: [],
@@ -28,7 +28,7 @@ const EMPTY_DATA: PortfolioData = {
 };
 
 const DEFAULT_FILTERS: Filters = {
-  search: '',
+  mapProject: '',
   status: 'All',
   projectType: 'All',
   recipient: 'All',
@@ -140,7 +140,6 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   }, [data.modalities, filters.assistance]);
 
   const filteredProjects = useMemo(() => {
-    const query = filters.search.trim().toLowerCase();
     return data.projects
       .filter(
         (project) =>
@@ -176,7 +175,10 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         (project) =>
           !assistanceProjects || assistanceProjects.has(project.project_number),
       )
-      .filter((project) => !query || projectSearchText(project).includes(query))
+      .filter(
+        (project) =>
+          !filters.mapProject || project.project_number === filters.mapProject,
+      )
       .sort(
         (a, b) =>
           b.approval_year - a.approval_year ||

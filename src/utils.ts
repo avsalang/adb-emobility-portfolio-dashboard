@@ -249,18 +249,18 @@ export function groupCount<T>(rows: T[], getter: (row: T) => string) {
     .sort((a, b) => b.value - a.value);
 }
 
-export function projectSearchText(project: Project): string {
-  return [
-    project.project_number,
-    project.project_title,
-    project.recipient,
-    project.sector,
-    project.manual_vehicle_modes,
-    project.manual_subthemes,
-    project.manual_emobility_activity_location,
-  ]
-    .join(' ')
-    .toLowerCase();
+export function dedicatedEmobilityFunding(project: Project): number | null {
+  if (project.manual_attribution_class === 'dedicated') {
+    return project.funding_total_usd_m;
+  }
+  if (
+    project.manual_attribution_class === 'quantified_minimum' &&
+    project.manual_funding_attribution ===
+      'minimum_20_percent_or_usd20_million'
+  ) {
+    return 20;
+  }
+  return null;
 }
 
 export function downloadProjectsCsv(projects: Project[]) {
@@ -274,6 +274,8 @@ export function downloadProjectsCsv(projects: Project[]) {
     'project_type',
     'modality',
     'funding_total_usd_m',
+    'dedicated_emobility_funding_usd_m',
+    'dedicated_emobility_funding_basis',
     'manual_attribution_class',
     'manual_subthemes',
     'manual_value_chain_stages',
@@ -285,7 +287,21 @@ export function downloadProjectsCsv(projects: Project[]) {
   const csv = [
     headers.join(','),
     ...projects.map((project) =>
-      headers.map((header) => escape(project[header])).join(','),
+      headers
+        .map((header) =>
+          escape(
+            header === 'dedicated_emobility_funding_usd_m'
+              ? dedicatedEmobilityFunding(project)
+              : header === 'dedicated_emobility_funding_basis'
+                ? project.manual_attribution_class === 'dedicated'
+                  ? 'full_project_value'
+                  : project.manual_attribution_class === 'quantified_minimum'
+                    ? 'minimum'
+                    : ''
+                : project[header],
+          ),
+        )
+        .join(','),
     ),
   ].join('\r\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });

@@ -39,7 +39,7 @@ export function Layout() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="sidebar-title">ADB portfolio</div>
+        <div className="sidebar-title">Navigation</div>
         <nav ref={navRef} className="sidebar-nav" aria-label="Portfolio views">
           {NAV_ITEMS.map(({ to, label, end }) => (
             <NavLink

@@ -147,7 +147,7 @@ export interface PortfolioData {
 }
 
 export interface Filters {
-  search: string;
+  mapProject: string;
   status: string;
   projectType: string;
   recipient: string;

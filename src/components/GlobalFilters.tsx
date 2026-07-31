@@ -2,7 +2,6 @@ import {
   ChevronDown,
   Filter,
   RotateCcw,
-  Search,
   SlidersHorizontal,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -13,12 +12,14 @@ function SelectControl({
   label,
   value,
   options,
+  optionGroups,
   onChange,
   formatter = (item) => item,
 }: {
   label: string;
   value: string;
   options: string[];
+  optionGroups?: { label: string; options: string[] }[];
   onChange: (value: string) => void;
   formatter?: (value: string) => string;
 }) {
@@ -27,11 +28,21 @@ function SelectControl({
       <span>{label}</span>
       <select value={value} onChange={(event) => onChange(event.target.value)}>
         <option value="All">All</option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {formatter(option)}
-          </option>
-        ))}
+        {optionGroups
+          ? optionGroups.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.options.map((option) => (
+                  <option key={option} value={option}>
+                    {formatter(option)}
+                  </option>
+                ))}
+              </optgroup>
+            ))
+          : options.map((option) => (
+              <option key={option} value={option}>
+                {formatter(option)}
+              </option>
+            ))}
       </select>
       <ChevronDown size={14} />
     </label>
@@ -53,7 +64,7 @@ export function GlobalFilters() {
     value: (typeof filters)[K],
   ) => setFilters((current) => ({ ...current, [key]: value }));
   const activeFilterCount = [
-    filters.search.trim() !== '',
+    filters.mapProject !== '',
     filters.status !== 'All',
     filters.projectType !== 'All',
     filters.recipient !== 'All',
@@ -77,15 +88,6 @@ export function GlobalFilters() {
             </span>
           </div>
         </div>
-        <label className="search-control">
-          <Search size={15} />
-          <input
-            value={filters.search}
-            onChange={(event) => update('search', event.target.value)}
-            placeholder="Search projects"
-            aria-label="Search projects"
-          />
-        </label>
         <SelectControl
           label="Status"
           value={filters.status}
@@ -96,6 +98,20 @@ export function GlobalFilters() {
           label="Recipient"
           value={filters.recipient}
           options={options.recipients}
+          optionGroups={[
+            {
+              label: 'Individual economies',
+              options: options.recipients.filter(
+                (recipient) => recipient !== 'Regional',
+              ),
+            },
+            {
+              label: 'Regional',
+              options: options.recipients.filter(
+                (recipient) => recipient === 'Regional',
+              ),
+            },
+          ]}
           onChange={(value) => update('recipient', value)}
         />
         <button

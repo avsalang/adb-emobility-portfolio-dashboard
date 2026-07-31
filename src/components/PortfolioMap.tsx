@@ -1,4 +1,5 @@
 import maplibregl, { type GeoJSONSource, LngLatBounds } from 'maplibre-gl';
+import { RotateCcw } from 'lucide-react';
 import { useEffect, useMemo, useRef } from 'react';
 import { financeExplorerMapStyle } from '../map/financeExplorerMapStyle';
 import {
@@ -27,6 +28,23 @@ function hideBoundaryLayers(map: maplibregl.Map) {
       }
     }
   });
+}
+
+function fitMapToFeatures(
+  map: maplibregl.Map,
+  features: { features: { geometry: { coordinates: number[] } }[] },
+  duration = 600,
+) {
+  if (!features.features.length) {
+    map.easeTo({ center: [115, 13], zoom: 2.15, duration });
+    return;
+  }
+
+  const bounds = new LngLatBounds();
+  features.features.forEach((feature) => {
+    bounds.extend(feature.geometry.coordinates as [number, number]);
+  });
+  map.fitBounds(bounds, { padding: 38, maxZoom: 5.5, duration });
 }
 
 function escapeHtml(value: unknown) {
@@ -279,13 +297,7 @@ export function PortfolioMap({
         },
       });
 
-      if (features.features.length) {
-        const bounds = new LngLatBounds();
-        features.features.forEach((feature) => {
-          bounds.extend(feature.geometry.coordinates as [number, number]);
-        });
-        map.fitBounds(bounds, { padding: 38, maxZoom: 5.5, duration: 600 });
-      }
+      fitMapToFeatures(map, features);
 
       map.on('mouseenter', 'project-location-points', (event) => {
         map.getCanvas().style.cursor = 'pointer';
@@ -413,21 +425,31 @@ export function PortfolioMap({
       | undefined;
     source?.setData(features);
     detailPopupRef.current?.remove();
-    if (!map || !source || !features.features.length) return;
-
-    const bounds = new LngLatBounds();
-    features.features.forEach((feature) => {
-      bounds.extend(feature.geometry.coordinates as [number, number]);
-    });
-    map.fitBounds(bounds, { padding: 38, maxZoom: 5.5, duration: 600 });
+    if (!map || !source) return;
+    fitMapToFeatures(map, features);
   }, [features]);
 
   return (
-    <div
-      ref={containerRef}
-      className="portfolio-map"
-      role="region"
-      aria-label="Interactive map of reported project activity locations"
-    />
+    <div className="portfolio-map-shell">
+      <div
+        ref={containerRef}
+        className="portfolio-map"
+        role="region"
+        aria-label="Interactive map of reported project activity locations"
+      />
+      <button
+        type="button"
+        className="map-reset-view"
+        title="Reset map view"
+        aria-label="Reset map view"
+        onClick={() => {
+          popupRef.current?.remove();
+          detailPopupRef.current?.remove();
+          if (mapRef.current) fitMapToFeatures(mapRef.current, features, 500);
+        }}
+      >
+        <RotateCcw size={16} />
+      </button>
+    </div>
   );
 }

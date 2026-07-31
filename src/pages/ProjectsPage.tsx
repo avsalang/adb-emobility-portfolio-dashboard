@@ -5,7 +5,6 @@ import {
   ChevronsRight,
   Download,
   ExternalLink,
-  SearchX,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { PageHeader, Panel } from '../components/Panel';
@@ -13,6 +12,7 @@ import { usePortfolio } from '../context/PortfolioContext';
 import type { Project } from '../types';
 import {
   STATUS_COLORS,
+  dedicatedEmobilityFunding,
   downloadProjectsCsv,
   fmtMoney,
   humanize,
@@ -20,7 +20,11 @@ import {
   splitTags,
 } from '../utils';
 
-type SortKey = 'approval_year' | 'funding_total_usd_m' | 'project_title';
+type SortKey =
+  | 'approval_year'
+  | 'funding_total_usd_m'
+  | 'dedicated_emobility_funding_usd_m'
+  | 'project_title';
 const PAGE_SIZE = 12;
 
 export function ProjectsPage() {
@@ -31,8 +35,18 @@ export function ProjectsPage() {
 
   const projects = useMemo(() => {
     const sorted = [...filteredProjects].sort((a, b) => {
-      const aValue = a[sortKey] as number | string;
-      const bValue = b[sortKey] as number | string;
+      const aValue =
+        sortKey === 'dedicated_emobility_funding_usd_m'
+          ? dedicatedEmobilityFunding(a)
+          : (a[sortKey] as number | string);
+      const bValue =
+        sortKey === 'dedicated_emobility_funding_usd_m'
+          ? dedicatedEmobilityFunding(b)
+          : (b[sortKey] as number | string);
+      if (aValue === null || bValue === null) {
+        if (aValue === bValue) return 0;
+        return aValue === null ? 1 : -1;
+      }
       const comparison =
         typeof aValue === 'number' && typeof bValue === 'number'
           ? aValue - bValue
@@ -97,6 +111,8 @@ export function ProjectsPage() {
                 <option value="approval_year:asc">Oldest approval year</option>
                 <option value="funding_total_usd_m:desc">Highest associated funding</option>
                 <option value="funding_total_usd_m:asc">Lowest associated funding</option>
+                <option value="dedicated_emobility_funding_usd_m:desc">Highest dedicated e-mobility funding</option>
+                <option value="dedicated_emobility_funding_usd_m:asc">Lowest dedicated e-mobility funding</option>
                 <option value="project_title:asc">Project title A–Z</option>
               </select>
             </label>
@@ -111,6 +127,7 @@ export function ProjectsPage() {
                     <th>Role</th>
                     <th>Leading subthemes</th>
                     <th aria-sort={ariaSort('funding_total_usd_m')}><button onClick={() => changeSort('funding_total_usd_m')}>Associated funding {sortKey === 'funding_total_usd_m' && <SortIcon size={12} />}</button></th>
+                    <th aria-sort={ariaSort('dedicated_emobility_funding_usd_m')}><button onClick={() => changeSort('dedicated_emobility_funding_usd_m')}>Dedicated e-mobility funding {sortKey === 'dedicated_emobility_funding_usd_m' && <SortIcon size={12} />}</button></th>
                     <th aria-label="Open source" />
                   </tr>
                 </thead>
@@ -141,6 +158,16 @@ export function ProjectsPage() {
                         </div>
                       </td>
                       <td data-label="Associated funding"><strong className="money-cell">{fmtMoney(project.funding_total_usd_m, true)}</strong></td>
+                      <td data-label="Dedicated e-mobility funding">
+                        {dedicatedEmobilityFunding(project) === null ? (
+                          <span className="funding-unavailable" title="No separately attributable dedicated amount">-</span>
+                        ) : (
+                          <strong className="money-cell">
+                            {project.manual_attribution_class === 'quantified_minimum' && 'At least '}
+                            {fmtMoney(dedicatedEmobilityFunding(project) ?? 0, true)}
+                          </strong>
+                        )}
+                      </td>
                       <td data-label="Source">
                         <a
                           href={project.project_url}
@@ -173,7 +200,6 @@ export function ProjectsPage() {
           </>
         ) : (
           <div className="empty-results">
-            <SearchX size={28} />
             <strong>No projects match the current filters</strong>
             <span>Reset one or more portfolio filters to broaden the result.</span>
           </div>
