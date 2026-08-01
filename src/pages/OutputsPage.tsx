@@ -371,28 +371,6 @@ export function OutputsPage() {
         <Panel
           title="Output coverage by project"
           subtitle="Unique projects with a structured record in each output category."
-          action={
-            <DataViewButton
-              onClick={() =>
-                setDataView({
-                  title: 'Output coverage by project',
-                  filename: 'ato_output_coverage.csv',
-                  columns: [
-                    { key: 'category', label: 'Output category' },
-                    { key: 'projects', label: 'Projects', align: 'right' },
-                    { key: 'records', label: 'Structured records', align: 'right' },
-                    { key: 'share', label: 'Portfolio share', align: 'right' },
-                  ],
-                  rows: families.map((row) => ({
-                    category: row.label,
-                    projects: row.projects,
-                    records: row.records,
-                    share: fmtPercent(row.projects / Math.max(filteredProjects.length, 1)),
-                  })),
-                })
-              }
-            />
-          }
         >
           <div className="coverage-bars output-coverage-bars">
             {families.map((row) => (
@@ -418,26 +396,6 @@ export function OutputsPage() {
         <Panel
           title="Primary output profile"
           subtitle="Share of projects by their principal e-mobility output profile."
-          action={
-            <DataViewButton
-              onClick={() =>
-                setDataView({
-                  title: 'Primary output profile',
-                  filename: 'ato_primary_output_profile.csv',
-                  columns: [
-                    { key: 'profile', label: 'Primary output profile' },
-                    { key: 'projects', label: 'Projects', align: 'right' },
-                    { key: 'share', label: 'Portfolio share', align: 'right' },
-                  ],
-                  rows: outputProfiles.map((row) => ({
-                    profile: row.label,
-                    projects: row.value,
-                    share: fmtPercent(row.value / Math.max(filteredProjects.length, 1)),
-                  })),
-                })
-              }
-            />
-          }
         >
           <div
             className="output-profile-stack"

@@ -3,9 +3,10 @@ import {
   ArrowUp,
   ChevronsLeft,
   ChevronsRight,
-  ChevronDown,
   Download,
   ExternalLink,
+  Search,
+  X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { PageHeader, Panel } from '../components/Panel';
@@ -32,7 +33,6 @@ const PAGE_SIZE = 12;
 
 export function ProjectsPage() {
   const {
-    data,
     filteredProjects,
     filteredRecipients,
     filteredModalities,
@@ -43,9 +43,27 @@ export function ProjectsPage() {
   const [sortKey, setSortKey] = useState<SortKey>('approval_year');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [exporting, setExporting] = useState(false);
+  const [query, setQuery] = useState('');
 
   const projects = useMemo(() => {
-    const sorted = [...filteredProjects].sort((a, b) => {
+    const normalizedQuery = query.trim().toLocaleLowerCase();
+    const matchingProjects = normalizedQuery
+      ? filteredProjects.filter((project) =>
+          [
+            project.project_number,
+            project.project_title,
+            project.recipient,
+            project.sector,
+            project.project_type,
+            project.status,
+            project.manual_subthemes,
+            project.manual_vehicle_modes,
+          ].some((value) =>
+            String(value ?? '').toLocaleLowerCase().includes(normalizedQuery),
+          ),
+        )
+      : filteredProjects;
+    const sorted = [...matchingProjects].sort((a, b) => {
       const aValue =
         sortKey === 'dedicated_emobility_funding_usd_m'
           ? dedicatedEmobilityFunding(a)
@@ -65,7 +83,7 @@ export function ProjectsPage() {
       return sortDirection === 'asc' ? comparison : -comparison;
     });
     return sorted;
-  }, [filteredProjects, sortDirection, sortKey]);
+  }, [filteredProjects, query, sortDirection, sortKey]);
 
   const maxPage = Math.max(1, Math.ceil(projects.length / PAGE_SIZE));
   const activePage = Math.min(page, maxPage);
@@ -99,27 +117,33 @@ export function ProjectsPage() {
         title="Project explorer"
         action={
           <div className="project-page-actions">
-            <label className="project-picker">
-              <span>Open project</span>
-              <select
-                value=""
-                onChange={(event) => {
-                  const selected = data.projects.find(
-                    (project) => project.project_number === event.target.value,
-                  );
-                  if (selected) setSelectedProject(selected);
-                }}
-              >
-                <option value="">Select project</option>
-                {[...filteredProjects]
-                  .sort((a, b) => a.project_number.localeCompare(b.project_number))
-                  .map((project) => (
-                    <option key={project.project_number} value={project.project_number}>
-                      {project.project_number} - {project.project_title}
-                    </option>
-                  ))}
-              </select>
-              <ChevronDown size={14} />
+            <label className="project-search">
+              <span>Search projects</span>
+              <div>
+                <Search size={16} />
+                <input
+                  type="search"
+                  value={query}
+                  placeholder="Project number, title, recipient or sector"
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setPage(1);
+                  }}
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuery('');
+                      setPage(1);
+                    }}
+                    title="Clear project search"
+                    aria-label="Clear project search"
+                  >
+                    <X size={15} />
+                  </button>
+                )}
+              </div>
             </label>
             <button
               className="download-button"
@@ -146,8 +170,8 @@ export function ProjectsPage() {
       />
 
       <Panel
-        title={`${projects.length} projects`}
-        subtitle="Sortable records for the current selection."
+        title={`${projects.length} project${projects.length === 1 ? '' : 's'}`}
+        subtitle={query ? `Matching “${query.trim()}” in the current selection.` : 'Sortable records for the current selection.'}
         className="project-table-panel"
       >
         {visible.length ? (

@@ -230,26 +230,6 @@ export function OverviewPage() {
         <Panel
           title="Delivery status"
           subtitle="Current status of projects in the filtered portfolio."
-          action={
-            <DataViewButton
-              onClick={() =>
-                setDataView({
-                  title: 'Delivery status',
-                  filename: 'ato_delivery_status.csv',
-                  columns: [
-                    { key: 'status', label: 'Status' },
-                    { key: 'projects', label: 'Projects', align: 'right' },
-                    { key: 'share', label: 'Portfolio share', align: 'right' },
-                  ],
-                  rows: statusMix.map((row) => ({
-                    status: row.name,
-                    projects: row.value,
-                    share: fmtPercent(row.value / Math.max(filteredProjects.length, 1)),
-                  })),
-                })
-              }
-            />
-          }
         >
           <div className="status-stack">
             <div className="status-track">

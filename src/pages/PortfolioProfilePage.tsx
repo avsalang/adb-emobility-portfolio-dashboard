@@ -18,11 +18,6 @@ import {
   YAxis,
 } from 'recharts';
 import { PageHeader, Panel } from '../components/Panel';
-import {
-  DataTableDrawer,
-  DataViewButton,
-  type DataView,
-} from '../components/DataTableDrawer';
 import { usePortfolio } from '../context/PortfolioContext';
 import {
   COLORS,
@@ -599,7 +594,6 @@ function PriorityCloud({
 
 export function PortfolioProfilePage() {
   const { filteredProjects, filteredSubthemes } = usePortfolio();
-  const [dataView, setDataView] = useState<DataView | null>(null);
 
   const subthemes = useMemo(() => {
     const grouped = new Map<string, Set<string>>();
@@ -703,26 +697,6 @@ export function PortfolioProfilePage() {
         <Panel
           title="Subtheme coverage"
           subtitle="Unique projects by multi-label e-mobility subtheme."
-          action={
-            <DataViewButton
-              onClick={() =>
-                setDataView({
-                  title: 'Subtheme coverage',
-                  filename: 'ato_subtheme_coverage.csv',
-                  columns: [
-                    { key: 'subtheme', label: 'Subtheme' },
-                    { key: 'projects', label: 'Projects', align: 'right' },
-                    { key: 'share', label: 'Portfolio share', align: 'right' },
-                  ],
-                  rows: subthemes.map((row) => ({
-                    subtheme: shortSubtheme(row.name),
-                    projects: row.projects,
-                    share: fmtPercent(row.projects / Math.max(filteredProjects.length, 1)),
-                  })),
-                })
-              }
-            />
-          }
         >
           <CoverageBars
             rows={subthemes.map((row) => ({
@@ -737,26 +711,6 @@ export function PortfolioProfilePage() {
         <Panel
           title="E-mobility attribution"
           subtitle="How central e-mobility is to each project."
-          action={
-            <DataViewButton
-              onClick={() =>
-                setDataView({
-                  title: 'E-mobility attribution',
-                  filename: 'ato_emobility_attribution.csv',
-                  columns: [
-                    { key: 'role', label: 'E-mobility role' },
-                    { key: 'projects', label: 'Projects', align: 'right' },
-                    { key: 'share', label: 'Portfolio share', align: 'right' },
-                  ],
-                  rows: attribution.map((row) => ({
-                    role: humanize(row.name),
-                    projects: row.value,
-                    share: fmtPercent(row.value / Math.max(filteredProjects.length, 1)),
-                  })),
-                })
-              }
-            />
-          }
         >
           <div className="pie-profile">
             <div
@@ -818,26 +772,6 @@ export function PortfolioProfilePage() {
         <Panel
           title="Vehicle and transport modes"
           subtitle="Unique project coverage by grouped mode; projects may span groups."
-          action={
-            <DataViewButton
-              onClick={() =>
-                setDataView({
-                  title: 'Vehicle and transport modes',
-                  filename: 'ato_vehicle_transport_modes.csv',
-                  columns: [
-                    { key: 'mode', label: 'Grouped mode' },
-                    { key: 'projects', label: 'Projects', align: 'right' },
-                    { key: 'share', label: 'Portfolio share', align: 'right' },
-                  ],
-                  rows: modes.map((row) => ({
-                    mode: row.name,
-                    projects: row.value,
-                    share: fmtPercent(row.value / Math.max(filteredProjects.length, 1)),
-                  })),
-                })
-              }
-            />
-          }
         >
           <DotPlot rows={modes} denominator={filteredProjects.length} />
         </Panel>
@@ -845,26 +779,6 @@ export function PortfolioProfilePage() {
         <Panel
           title="Sector distribution"
           subtitle="Projects by primary ADB sector."
-          action={
-            <DataViewButton
-              onClick={() =>
-                setDataView({
-                  title: 'Sector distribution',
-                  filename: 'ato_sector_distribution.csv',
-                  columns: [
-                    { key: 'sector', label: 'ADB sector' },
-                    { key: 'projects', label: 'Projects', align: 'right' },
-                    { key: 'share', label: 'Portfolio share', align: 'right' },
-                  ],
-                  rows: sectors.map((row) => ({
-                    sector: row.name,
-                    projects: row.value,
-                    share: fmtPercent(row.value / Math.max(filteredProjects.length, 1)),
-                  })),
-                })
-              }
-            />
-          }
         >
           <SectorDonut
             rows={sectors}
@@ -877,33 +791,6 @@ export function PortfolioProfilePage() {
         className="value-chain-panel"
         title="Value-chain stages"
         subtitle="Project coverage across the e-mobility value chain."
-        action={
-          <DataViewButton
-            onClick={() =>
-              setDataView({
-                title: 'Value-chain stages',
-                filename: 'ato_value_chain_stages.csv',
-                columns: [
-                  { key: 'stage', label: 'Value-chain stage' },
-                  { key: 'projects', label: 'Projects', align: 'right' },
-                  { key: 'share', label: 'Portfolio share', align: 'right' },
-                ],
-                rows: [
-                  ...valueChain.stages.map((stage) => ({
-                    stage: stage.label,
-                    projects: stage.value,
-                    share: fmtPercent(stage.value / Math.max(filteredProjects.length, 1)),
-                  })),
-                  {
-                    stage: 'Market and institutional enablers',
-                    projects: valueChain.enablerCount,
-                    share: fmtPercent(valueChain.enablerCount / Math.max(filteredProjects.length, 1)),
-                  },
-                ],
-              })
-            }
-          />
-        }
       >
         <ValueChainChart
           stages={valueChain.stages}
@@ -916,33 +803,9 @@ export function PortfolioProfilePage() {
         className="priority-cloud-panel"
         title="Cross-cutting priorities"
         subtitle="Recurring priorities across the portfolio."
-        action={
-          <DataViewButton
-            onClick={() =>
-              setDataView({
-                title: 'Cross-cutting priorities',
-                filename: 'ato_cross_cutting_priorities.csv',
-                columns: [
-                  { key: 'priority', label: 'Priority' },
-                  { key: 'projects', label: 'Projects', align: 'right' },
-                  { key: 'share', label: 'Portfolio share', align: 'right' },
-                ],
-                rows: crossCuttingTopics.map((topic) => ({
-                  priority: topic.label,
-                  projects: topic.value,
-                  share: fmtPercent(topic.value / Math.max(filteredProjects.length, 1)),
-                })),
-              })
-            }
-          />
-        }
       >
         <PriorityCloud topics={crossCuttingTopics} />
       </Panel>
-
-      {dataView && (
-        <DataTableDrawer view={dataView} onClose={() => setDataView(null)} />
-      )}
     </div>
   );
 }
