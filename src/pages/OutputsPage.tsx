@@ -1,6 +1,18 @@
+import { useState } from 'react';
+import {
+  DataTableDrawer,
+  DataViewButton,
+  type DataView,
+} from '../components/DataTableDrawer';
 import { PageHeader, Panel } from '../components/Panel';
 import { usePortfolio } from '../context/PortfolioContext';
-import { COLORS, fmtNumber, fmtPercent, sum } from '../utils';
+import {
+  COLORS,
+  fmtNumber,
+  fmtPercent,
+  formatVehicleMode,
+  sum,
+} from '../utils';
 
 const OUTPUT_FAMILY_LABELS: Record<string, string> = {
   finance_market: 'Finance and market development',
@@ -58,10 +70,14 @@ function FleetSummaryCard({
   label,
   total,
   breakdown,
+  contributorCount,
+  onViewContributors,
 }: {
   label: string;
   total: number;
   breakdown: FleetBreakdownItem[];
+  contributorCount: number;
+  onViewContributors: () => void;
 }) {
   return (
     <article className="kpi-card fleet-summary-card">
@@ -101,12 +117,20 @@ function FleetSummaryCard({
           ))}
         </div>
       </div>
+      <div className="fleet-summary-actions">
+        <span>{fmtNumber(contributorCount)} contributing projects</span>
+        <DataViewButton label="View projects" onClick={onViewContributors} />
+      </div>
     </article>
   );
 }
 
 export function OutputsPage() {
   const { filteredKpis, filteredProjects } = usePortfolio();
+  const [dataView, setDataView] = useState<DataView | null>(null);
+  const projectById = new Map(
+    filteredProjects.map((project) => [project.project_number, project]),
+  );
 
   const directSafe = filteredKpis.filter(
     (row) => row.emobility_attribution === 'direct' && row.is_safe_to_aggregate,
@@ -227,6 +251,52 @@ export function OutputsPage() {
       color: COLORS.amber,
     },
   ].filter((row) => row.value > 0);
+  const fleetDataView = (
+    title: string,
+    filename: string,
+    rows: typeof deliveredFleetRows,
+  ): DataView => {
+    const grouped = new Map<
+      string,
+      { value: number; modes: Set<string>; indicators: Set<string> }
+    >();
+    rows.forEach((row) => {
+      const current = grouped.get(row.project_number) ?? {
+        value: 0,
+        modes: new Set<string>(),
+        indicators: new Set<string>(),
+      };
+      current.value += row.value_numeric ?? 0;
+      current.modes.add(formatVehicleMode(row.vehicle_or_mode));
+      current.indicators.add(row.indicator);
+      grouped.set(row.project_number, current);
+    });
+    return {
+      title,
+      filename,
+      columns: [
+        { key: 'project_number', label: 'Project number' },
+        { key: 'project_title', label: 'Project title' },
+        { key: 'status', label: 'Status' },
+        { key: 'vehicle_mode', label: 'Vehicle or mode' },
+        { key: 'reported_value', label: 'Fleet vehicles', align: 'right' },
+        { key: 'indicator', label: 'Reported output' },
+      ],
+      rows: [...grouped.entries()]
+        .map(([projectNumber, value]) => ({
+          project_number: projectNumber,
+          project_title:
+            projectById.get(projectNumber)?.project_title ?? projectNumber,
+          status: projectById.get(projectNumber)?.status ?? '',
+          vehicle_mode: [...value.modes].join('; '),
+          reported_value: value.value,
+          indicator: [...value.indicators].join('; '),
+        }))
+        .sort((a, b) =>
+          String(a.project_number).localeCompare(String(b.project_number)),
+        ),
+    };
+  };
 
   const families = (() => {
     const grouped = new Map<string, { records: number; projects: Set<string> }>();
@@ -269,11 +339,31 @@ export function OutputsPage() {
           label="Delivered fleet (vehicles)"
           total={deliveredFleet}
           breakdown={deliveredFleetBreakdown}
+          contributorCount={new Set(deliveredFleetRows.map((row) => row.project_number)).size}
+          onViewContributors={() =>
+            setDataView(
+              fleetDataView(
+                'Delivered fleet contributing projects',
+                'ato_delivered_fleet_projects.csv',
+                deliveredFleetRows,
+              ),
+            )
+          }
         />
         <FleetSummaryCard
           label="Fleet pipeline (vehicles)"
           total={pipelineFleet}
           breakdown={pipelineFleetBreakdown}
+          contributorCount={new Set(pipelineFleetRows.map((row) => row.project_number)).size}
+          onViewContributors={() =>
+            setDataView(
+              fleetDataView(
+                'Fleet pipeline contributing projects',
+                'ato_fleet_pipeline_projects.csv',
+                pipelineFleetRows,
+              ),
+            )
+          }
         />
       </div>
 
@@ -281,6 +371,28 @@ export function OutputsPage() {
         <Panel
           title="Output coverage by project"
           subtitle="Unique projects with a structured record in each output category."
+          action={
+            <DataViewButton
+              onClick={() =>
+                setDataView({
+                  title: 'Output coverage by project',
+                  filename: 'ato_output_coverage.csv',
+                  columns: [
+                    { key: 'category', label: 'Output category' },
+                    { key: 'projects', label: 'Projects', align: 'right' },
+                    { key: 'records', label: 'Structured records', align: 'right' },
+                    { key: 'share', label: 'Portfolio share', align: 'right' },
+                  ],
+                  rows: families.map((row) => ({
+                    category: row.label,
+                    projects: row.projects,
+                    records: row.records,
+                    share: fmtPercent(row.projects / Math.max(filteredProjects.length, 1)),
+                  })),
+                })
+              }
+            />
+          }
         >
           <div className="coverage-bars output-coverage-bars">
             {families.map((row) => (
@@ -306,6 +418,26 @@ export function OutputsPage() {
         <Panel
           title="Primary output profile"
           subtitle="Share of projects by their principal e-mobility output profile."
+          action={
+            <DataViewButton
+              onClick={() =>
+                setDataView({
+                  title: 'Primary output profile',
+                  filename: 'ato_primary_output_profile.csv',
+                  columns: [
+                    { key: 'profile', label: 'Primary output profile' },
+                    { key: 'projects', label: 'Projects', align: 'right' },
+                    { key: 'share', label: 'Portfolio share', align: 'right' },
+                  ],
+                  rows: outputProfiles.map((row) => ({
+                    profile: row.label,
+                    projects: row.value,
+                    share: fmtPercent(row.value / Math.max(filteredProjects.length, 1)),
+                  })),
+                })
+              }
+            />
+          }
         >
           <div
             className="output-profile-stack"
@@ -337,6 +469,10 @@ export function OutputsPage() {
           </div>
         </Panel>
       </div>
+
+      {dataView && (
+        <DataTableDrawer view={dataView} onClose={() => setDataView(null)} />
+      )}
     </div>
   );
 }

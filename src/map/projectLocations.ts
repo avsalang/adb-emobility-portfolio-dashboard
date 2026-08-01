@@ -1,4 +1,8 @@
 import type { Project } from '../types';
+import {
+  dedicatedEmobilityFunding,
+  dedicatedFundingBasis,
+} from '../utils';
 
 export type LocationPrecision = 'site' | 'city' | 'subnational' | 'country';
 
@@ -16,6 +20,8 @@ export interface ProjectMapLocation {
   approvalYear: number;
   recipient: string;
   funding: number;
+  identifiedFunding: number | null;
+  identifiedFundingBasis: string;
   reportedLocation: string;
   locationName: string;
   coordinates: [number, number];
@@ -552,6 +558,8 @@ export function buildProjectMapLocations(projects: Project[]) {
       approvalYear: project.approval_year,
       recipient: project.recipient,
       funding: project.funding_total_usd_m,
+      identifiedFunding: dedicatedEmobilityFunding(project),
+      identifiedFundingBasis: dedicatedFundingBasis(project),
       reportedLocation: project.manual_emobility_activity_location,
       locationName: location.label,
       coordinates: location.coordinates,

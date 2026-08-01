@@ -1,4 +1,9 @@
-import type { Project } from './types';
+import type {
+  KpiRecord,
+  ModalityAllocation,
+  Project,
+  RecipientAllocation,
+} from './types';
 
 export const COLORS = {
   navy: '#0d2742',
@@ -263,52 +268,108 @@ export function dedicatedEmobilityFunding(project: Project): number | null {
   return null;
 }
 
-export function downloadProjectsCsv(projects: Project[]) {
-  const headers = [
-    'project_number',
-    'project_title',
-    'approval_year',
-    'status',
-    'recipient',
-    'sector',
-    'project_type',
-    'modality',
-    'funding_total_usd_m',
-    'dedicated_emobility_funding_usd_m',
-    'dedicated_emobility_funding_basis',
-    'manual_attribution_class',
-    'manual_subthemes',
-    'manual_value_chain_stages',
-    'manual_vehicle_modes',
-    'manual_emobility_activity_location',
-    'project_url',
-  ];
-  const escape = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
-  const csv = [
-    headers.join(','),
-    ...projects.map((project) =>
-      headers
-        .map((header) =>
-          escape(
-            header === 'dedicated_emobility_funding_usd_m'
-              ? dedicatedEmobilityFunding(project)
-              : header === 'dedicated_emobility_funding_basis'
-                ? project.manual_attribution_class === 'dedicated'
-                  ? 'full_project_value'
-                  : project.manual_attribution_class === 'quantified_minimum'
-                    ? 'minimum'
-                    : ''
-                : project[header],
-          ),
-        )
-        .join(','),
+export function projectYearBasis(project: Project): string {
+  return project.status === 'Proposed' ? 'Expected approval year' : 'Approval year';
+}
+
+export function dedicatedFundingBasis(project: Project): string {
+  if (project.manual_attribution_class === 'dedicated') {
+    return 'Full project value';
+  }
+  if (dedicatedEmobilityFunding(project) !== null) {
+    return 'Quantified minimum';
+  }
+  return 'Not separately quantified';
+}
+
+function fitWorksheetColumns(
+  worksheet: { ['!cols']?: { wch?: number }[]; ['!autofilter']?: { ref: string } },
+  rows: Record<string, unknown>[],
+) {
+  const columnName = (index: number) => {
+    let name = '';
+    for (let value = index + 1; value > 0; value = Math.floor((value - 1) / 26)) {
+      name = String.fromCharCode(65 + ((value - 1) % 26)) + name;
+    }
+    return name;
+  };
+  const headers = Object.keys(rows[0] ?? {});
+  worksheet['!cols'] = headers.map((header) => ({
+    wch: Math.min(
+      45,
+      Math.max(
+        12,
+        header.length + 2,
+        ...rows.slice(0, 250).map((row) => String(row[header] ?? '').length + 2),
+      ),
     ),
-  ].join('\r\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = 'ato_adb_emobility_projects_filtered.csv';
-  anchor.click();
-  URL.revokeObjectURL(url);
+  }));
+  if (headers.length && rows.length) {
+    const lastColumn = columnName(headers.length - 1);
+    worksheet['!autofilter'] = { ref: `A1:${lastColumn}${rows.length + 1}` };
+  }
+}
+
+export async function downloadPortfolioWorkbook({
+  projects,
+  recipients,
+  modalities,
+  kpis,
+}: {
+  projects: Project[];
+  recipients: RecipientAllocation[];
+  modalities: ModalityAllocation[];
+  kpis: KpiRecord[];
+}) {
+  const XLSX = await import('xlsx');
+  const projectIds = new Set(projects.map((project) => project.project_number));
+  const projectRows = projects.map((project) => ({
+    project_number: project.project_number,
+    project_title: project.project_title,
+    project_url: project.project_url,
+    approval_or_expected_year: project.approval_year,
+    year_basis: projectYearBasis(project),
+    status: project.status,
+    recipient: project.recipient,
+    sector: project.sector,
+    project_type: project.project_type,
+    modality: project.modality,
+    mode_assistance: project.mode_assistance,
+    associated_funding_usd_m: project.funding_total_usd_m,
+    identified_emobility_funding_usd_m:
+      dedicatedEmobilityFunding(project),
+    identified_emobility_funding_basis: dedicatedFundingBasis(project),
+    emobility_role: project.manual_attribution_class,
+    subthemes: project.manual_subthemes,
+    value_chain_stages: project.manual_value_chain_stages,
+    vehicle_modes: project.manual_vehicle_modes,
+    activity_location: project.manual_emobility_activity_location,
+    implementation_scale: project.manual_implementation_scale,
+    cross_cutting_focus: project.manual_cross_cutting_focus,
+  }));
+  const recipientRows = recipients
+    .filter((row) => projectIds.has(row.project_number))
+    .map((row) => ({ ...row }));
+  const modalityRows = modalities
+    .filter((row) => projectIds.has(row.project_number))
+    .map((row) => ({ ...row }));
+  const kpiRows = kpis
+    .filter((row) => projectIds.has(row.project_number))
+    .map((row) => ({ ...row }));
+
+  const workbook = XLSX.utils.book_new();
+  [
+    ['Projects', projectRows],
+    ['Recipient Funding', recipientRows],
+    ['Modality Funding', modalityRows],
+    ['KPIs', kpiRows],
+  ].forEach(([name, rows]) => {
+    const typedRows = rows as Record<string, unknown>[];
+    const worksheet = XLSX.utils.json_to_sheet(typedRows);
+    fitWorksheetColumns(worksheet, typedRows);
+    XLSX.utils.book_append_sheet(workbook, worksheet, name as string);
+  });
+  XLSX.writeFile(workbook, 'ato_adb_emobility_portfolio_filtered.xlsx', {
+    compression: true,
+  });
 }

@@ -10,17 +10,23 @@ import {
   YAxis,
 } from 'recharts';
 import { KpiCard } from '../components/KpiCard';
+import {
+  DataTableDrawer,
+  DataViewButton,
+  type DataView,
+} from '../components/DataTableDrawer';
 import { PageHeader, Panel } from '../components/Panel';
 import { usePortfolio } from '../context/PortfolioContext';
 import {
   ASSISTANCE_COLORS,
   COLORS,
+  dedicatedEmobilityFunding,
   fmtMoney,
   fmtNumber,
   sum,
 } from '../utils';
 
-type Metric = 'funding' | 'projects';
+type Metric = 'associated' | 'identified' | 'projects';
 
 const ASSISTANCE_TYPES = ['Loan', 'Grant', 'TA'] as const;
 
@@ -31,13 +37,33 @@ export function FundingPage() {
     filteredModalities,
     filters,
   } = usePortfolio();
-  const [metric, setMetric] = useState<Metric>('funding');
+  const [metric, setMetric] = useState<Metric>('associated');
+  const [dataView, setDataView] = useState<DataView | null>(null);
 
-  const funding = sum(filteredProjects, (project) => project.funding_total_usd_m);
+  const fundingForProject = (project: (typeof filteredProjects)[number]) =>
+    metric === 'identified'
+      ? dedicatedEmobilityFunding(project) ?? 0
+      : project.funding_total_usd_m;
+  const isFundingMetric = metric !== 'projects';
+  const fundingName =
+    metric === 'identified'
+      ? 'Identified e-mobility funding'
+      : 'Associated funding';
+  const fundingPrefix = metric === 'identified' ? 'At least ' : '';
+  const projectById = useMemo(
+    () =>
+      new Map(
+        filteredProjects.map((project) => [project.project_number, project]),
+      ),
+    [filteredProjects],
+  );
+
   const sovereign = filteredProjects.filter((project) => project.project_type === 'Sovereign');
   const nonsovereign = filteredProjects.filter((project) => project.project_type === 'Nonsovereign');
 
-  const assistanceByYear = useMemo(() => {
+  const assistanceByYear = useMemo<
+    Array<{ year: number; Loan: number; Grant: number; TA: number }>
+  >(() => {
     const grouped = new Map<
       number,
       Map<string, { funding: number; projectIds: Set<string> }>
@@ -48,7 +74,13 @@ export function FundingPage() {
         funding: 0,
         projectIds: new Set<string>(),
       };
-      current.funding += row.funding_usd_m;
+      const project = projectById.get(row.project_number);
+      const ratio =
+        metric === 'identified' && project
+          ? (dedicatedEmobilityFunding(project) ?? 0) /
+            Math.max(project.funding_total_usd_m, 1e-9)
+          : 1;
+      current.funding += row.funding_usd_m * ratio;
       current.projectIds.add(row.project_number);
       year.set(row.generalized_assistance_type, current);
       grouped.set(row.approval_year, year);
@@ -64,16 +96,16 @@ export function FundingPage() {
               const cell = grouped.get(year)?.get(name);
               return [
                 name,
-                metric === 'funding'
+                isFundingMetric
                   ? cell?.funding ?? 0
                   : cell?.projectIds.size ?? 0,
               ];
             }),
           ),
-        };
+        } as { year: number; Loan: number; Grant: number; TA: number };
       },
     );
-  }, [filteredModalities, filters.yearEnd, filters.yearStart, metric]);
+  }, [filteredModalities, filters.yearEnd, filters.yearStart, isFundingMetric, metric, projectById]);
 
   const sovereigntyByYear = useMemo(() => {
     const grouped = new Map<
@@ -88,7 +120,7 @@ export function FundingPage() {
         projects: 0,
       };
       current[project.project_type as 'Sovereign'] +=
-        metric === 'funding' ? project.funding_total_usd_m : 1;
+        isFundingMetric ? fundingForProject(project) : 1;
       current.projects += 1;
       grouped.set(project.approval_year, current);
     });
@@ -104,16 +136,23 @@ export function FundingPage() {
         };
       },
     );
-  }, [filteredProjects, filters.yearEnd, filters.yearStart, metric]);
+  }, [filteredProjects, filters.yearEnd, filters.yearStart, isFundingMetric, metric]);
 
   const recipients = useMemo(() => {
+    const rankingMetric = metric === 'projects' ? 'projects' : 'funding';
     const grouped = new Map<string, { funding: number; projectIds: Set<string> }>();
     filteredRecipients.forEach((row) => {
       const current = grouped.get(row.allocated_recipient) ?? {
         funding: 0,
         projectIds: new Set<string>(),
       };
-      current.funding += row.funding_usd_m;
+      const project = projectById.get(row.project_number);
+      const ratio =
+        metric === 'identified' && project
+          ? (dedicatedEmobilityFunding(project) ?? 0) /
+            Math.max(project.funding_total_usd_m, 1e-9)
+          : 1;
+      current.funding += row.funding_usd_m * ratio;
       current.projectIds.add(row.project_number);
       grouped.set(row.allocated_recipient, current);
     });
@@ -124,18 +163,20 @@ export function FundingPage() {
         projects: value.projectIds.size,
         projectIds: value.projectIds,
       }))
-      .sort((a, b) => b[metric] - a[metric]);
-  }, [filteredRecipients, metric]);
+      .sort((a, b) => b[rankingMetric] - a[rankingMetric]);
+  }, [filteredRecipients, metric, projectById]);
 
   const portfolioValue =
-    metric === 'funding' ? fmtMoney(funding, true) : fmtNumber(filteredProjects.length);
+    isFundingMetric
+      ? `${fundingPrefix}${fmtMoney(sum(filteredProjects, fundingForProject), true)}`
+      : fmtNumber(filteredProjects.length);
   const sovereignValue =
-    metric === 'funding'
-      ? fmtMoney(sum(sovereign, (project) => project.funding_total_usd_m), true)
+    isFundingMetric
+      ? `${fundingPrefix}${fmtMoney(sum(sovereign, fundingForProject), true)}`
       : fmtNumber(sovereign.length);
   const nonsovereignValue =
-    metric === 'funding'
-      ? fmtMoney(sum(nonsovereign, (project) => project.funding_total_usd_m), true)
+    isFundingMetric
+      ? `${fundingPrefix}${fmtMoney(sum(nonsovereign, fundingForProject), true)}`
       : fmtNumber(nonsovereign.length);
 
   return (
@@ -145,11 +186,18 @@ export function FundingPage() {
         action={
           <div className="segmented-control" role="group" aria-label="Portfolio metric">
             <button
-              className={metric === 'funding' ? 'active' : ''}
-              aria-pressed={metric === 'funding'}
-              onClick={() => setMetric('funding')}
+              className={metric === 'associated' ? 'active' : ''}
+              aria-pressed={metric === 'associated'}
+              onClick={() => setMetric('associated')}
             >
-              Funding
+              Associated
+            </button>
+            <button
+              className={metric === 'identified' ? 'active' : ''}
+              aria-pressed={metric === 'identified'}
+              onClick={() => setMetric('identified')}
+            >
+              Identified e-mobility
             </button>
             <button
               className={metric === 'projects' ? 'active' : ''}
@@ -164,15 +212,15 @@ export function FundingPage() {
 
       <div className="kpi-grid kpi-grid-three">
         <KpiCard
-          label={metric === 'funding' ? 'Portfolio envelope' : 'Portfolio projects'}
+          label={isFundingMetric ? fundingName : 'Portfolio projects'}
           value={portfolioValue}
         />
         <KpiCard
-          label={metric === 'funding' ? 'Sovereign operations' : 'Sovereign projects'}
+          label={isFundingMetric ? `Sovereign ${fundingName.toLowerCase()}` : 'Sovereign projects'}
           value={sovereignValue}
         />
         <KpiCard
-          label={metric === 'funding' ? 'Nonsovereign operations' : 'Nonsovereign projects'}
+          label={isFundingMetric ? `Nonsovereign ${fundingName.toLowerCase()}` : 'Nonsovereign projects'}
           value={nonsovereignValue}
         />
       </div>
@@ -181,9 +229,29 @@ export function FundingPage() {
         <Panel
           title="Sovereign and nonsovereign trajectory"
           subtitle={
-            metric === 'funding'
-              ? 'Associated funding by recorded approval year.'
-              : 'Projects by recorded approval year.'
+            isFundingMetric
+              ? `${fundingName} by approval or expected year.`
+              : 'Projects by approval or expected year.'
+          }
+          action={
+            <DataViewButton
+              onClick={() =>
+                setDataView({
+                  title: 'Sovereign and nonsovereign trajectory',
+                  filename: 'ato_sovereign_trajectory.csv',
+                  columns: [
+                    { key: 'year', label: 'Approval or expected year' },
+                    { key: 'sovereign', label: 'Sovereign', align: 'right' },
+                    { key: 'nonsovereign', label: 'Nonsovereign', align: 'right' },
+                  ],
+                  rows: sovereigntyByYear.map((row) => ({
+                    year: row.year,
+                    sovereign: Number(row.Sovereign.toFixed(3)),
+                    nonsovereign: Number(row.Nonsovereign.toFixed(3)),
+                  })),
+                })
+              }
+            />
           }
         >
           <div className="chart-xl">
@@ -191,15 +259,15 @@ export function FundingPage() {
               <BarChart data={sovereigntyByYear} margin={{ top: 12, right: 8, bottom: 0, left: 0 }}>
                 <CartesianGrid stroke="#e8eef4" vertical={false} />
                 <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fontSize: 16 }} />
-                <YAxis tickFormatter={(value) => metric === 'funding' ? `$${value >= 1000 ? `${(value / 1000).toFixed(1)}B` : `${value}M`}` : value} axisLine={false} tickLine={false} tick={{ fontSize: 16 }} width={58} />
+                <YAxis tickFormatter={(value) => isFundingMetric ? `$${value >= 1000 ? `${(value / 1000).toFixed(1)}B` : `${value}M`}` : value} axisLine={false} tickLine={false} tick={{ fontSize: 16 }} width={58} />
                 <Tooltip
                   formatter={(value, name) => [
-                    metric === 'funding'
+                    isFundingMetric
                       ? fmtMoney(Number(value), true)
                       : `${fmtNumber(Number(value))} projects`,
                     String(name),
                   ]}
-                  labelFormatter={(year) => `Approval year ${year}`}
+                  labelFormatter={(year) => `Approval or expected year ${year}`}
                 />
                 <Legend iconType="circle" iconSize={8} />
                 <Bar
@@ -222,9 +290,31 @@ export function FundingPage() {
         <Panel
           title="Assistance mix over time"
           subtitle={
-            metric === 'funding'
-              ? 'Funding by assistance type and recorded approval year.'
+            isFundingMetric
+              ? `${fundingName} by assistance type and year.`
               : 'Project assignments by assistance type; projects may span types.'
+          }
+          action={
+            <DataViewButton
+              onClick={() =>
+                setDataView({
+                  title: 'Assistance mix over time',
+                  filename: 'ato_assistance_mix_by_year.csv',
+                  columns: [
+                    { key: 'year', label: 'Approval or expected year' },
+                    { key: 'loan', label: 'Loan', align: 'right' },
+                    { key: 'grant', label: 'Grant', align: 'right' },
+                    { key: 'ta', label: 'Technical assistance', align: 'right' },
+                  ],
+                  rows: assistanceByYear.map((row) => ({
+                    year: row.year,
+                    loan: Number(Number(row.Loan ?? 0).toFixed(3)),
+                    grant: Number(Number(row.Grant ?? 0).toFixed(3)),
+                    ta: Number(Number(row.TA ?? 0).toFixed(3)),
+                  })),
+                })
+              }
+            />
           }
         >
           <div className="chart-xl">
@@ -242,7 +332,7 @@ export function FundingPage() {
                 />
                 <YAxis
                   tickFormatter={(value) =>
-                    metric === 'funding'
+                    isFundingMetric
                       ? `${
                           value >= 1000
                             ? `$${(value / 1000).toFixed(1)}B`
@@ -257,14 +347,14 @@ export function FundingPage() {
                 />
                 <Tooltip
                   formatter={(value, name) => [
-                    metric === 'funding'
+                    isFundingMetric
                       ? fmtMoney(Number(value), true)
                       : `${fmtNumber(Number(value))} project${
                           Number(value) === 1 ? '' : 's'
                         }`,
                     String(name),
                   ]}
-                  labelFormatter={(year) => `Approval year ${year}`}
+                  labelFormatter={(year) => `Approval or expected year ${year}`}
                 />
                 <Legend
                   iconType="circle"
@@ -291,23 +381,51 @@ export function FundingPage() {
 
       <Panel
         title="Recipient ranking"
-        subtitle="Recipients ranked by funding or project count."
+        subtitle={`Recipients ranked by ${isFundingMetric ? fundingName.toLowerCase() : 'project count'}.`}
+        action={
+          <DataViewButton
+            label={`View all ${recipients.length}`}
+            onClick={() =>
+              setDataView({
+                title: 'Recipient ranking',
+                filename: 'ato_recipient_ranking.csv',
+                columns: [
+                  { key: 'rank', label: 'Rank', align: 'right' },
+                  { key: 'recipient', label: 'Recipient' },
+                  { key: 'value', label: isFundingMetric ? `${fundingName} (USD million)` : 'Projects', align: 'right' },
+                  { key: 'projects', label: 'Projects', align: 'right' },
+                ],
+                rows: recipients.map((recipient, index) => ({
+                  rank: index + 1,
+                  recipient: recipient.name,
+                  value: Number(recipient[metric === 'projects' ? 'projects' : 'funding'].toFixed(3)),
+                  projects: recipient.projects,
+                })),
+              })
+            }
+          />
+        }
       >
         <div className="recipient-bars">
           {recipients.slice(0, 15).map((recipient, index) => {
-            const value = recipient[metric];
-            const max = recipients[0]?.[metric] || 1;
+            const rankingMetric = metric === 'projects' ? 'projects' : 'funding';
+            const value = recipient[rankingMetric];
+            const max = recipients[0]?.[rankingMetric] || 1;
             return (
               <div key={recipient.name}>
                 <b>{index + 1}</b>
                 <span>{recipient.name}</span>
                 <i><em style={{ width: `${(value / max) * 100}%` }} /></i>
-                <strong>{metric === 'funding' ? fmtMoney(value, true) : fmtNumber(value)}</strong>
+                <strong>{isFundingMetric ? fmtMoney(value, true) : fmtNumber(value)}</strong>
               </div>
             );
           })}
         </div>
       </Panel>
+
+      {dataView && (
+        <DataTableDrawer view={dataView} onClose={() => setDataView(null)} />
+      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import {
   ArrowUp,
   ChevronsLeft,
   ChevronsRight,
+  ChevronDown,
   Download,
   ExternalLink,
 } from 'lucide-react';
@@ -13,9 +14,11 @@ import type { Project } from '../types';
 import {
   STATUS_COLORS,
   dedicatedEmobilityFunding,
-  downloadProjectsCsv,
+  dedicatedFundingBasis,
+  downloadPortfolioWorkbook,
   fmtMoney,
   humanize,
+  projectYearBasis,
   shortSubtheme,
   splitTags,
 } from '../utils';
@@ -28,10 +31,18 @@ type SortKey =
 const PAGE_SIZE = 12;
 
 export function ProjectsPage() {
-  const { filteredProjects, setSelectedProject } = usePortfolio();
+  const {
+    data,
+    filteredProjects,
+    filteredRecipients,
+    filteredModalities,
+    filteredKpis,
+    setSelectedProject,
+  } = usePortfolio();
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<SortKey>('approval_year');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [exporting, setExporting] = useState(false);
 
   const projects = useMemo(() => {
     const sorted = [...filteredProjects].sort((a, b) => {
@@ -87,10 +98,50 @@ export function ProjectsPage() {
       <PageHeader
         title="Project explorer"
         action={
-          <button className="download-button" onClick={() => downloadProjectsCsv(projects)}>
-            <Download size={15} />
-            Download filtered data
-          </button>
+          <div className="project-page-actions">
+            <label className="project-picker">
+              <span>Open project</span>
+              <select
+                value=""
+                onChange={(event) => {
+                  const selected = data.projects.find(
+                    (project) => project.project_number === event.target.value,
+                  );
+                  if (selected) setSelectedProject(selected);
+                }}
+              >
+                <option value="">Select project</option>
+                {[...filteredProjects]
+                  .sort((a, b) => a.project_number.localeCompare(b.project_number))
+                  .map((project) => (
+                    <option key={project.project_number} value={project.project_number}>
+                      {project.project_number} - {project.project_title}
+                    </option>
+                  ))}
+              </select>
+              <ChevronDown size={14} />
+            </label>
+            <button
+              className="download-button"
+              disabled={exporting}
+              onClick={async () => {
+                setExporting(true);
+                try {
+                  await downloadPortfolioWorkbook({
+                    projects,
+                    recipients: filteredRecipients,
+                    modalities: filteredModalities,
+                    kpis: filteredKpis,
+                  });
+                } finally {
+                  setExporting(false);
+                }
+              }}
+            >
+              <Download size={15} />
+              {exporting ? 'Preparing workbook' : 'Download workbook'}
+            </button>
+          </div>
         }
       />
 
@@ -107,27 +158,38 @@ export function ProjectsPage() {
                 value={sortValue}
                 onChange={(event) => changeMobileSort(event.target.value)}
               >
-                <option value="approval_year:desc">Newest approval year</option>
-                <option value="approval_year:asc">Oldest approval year</option>
+                <option value="approval_year:desc">Newest approval or expected year</option>
+                <option value="approval_year:asc">Oldest approval or expected year</option>
                 <option value="funding_total_usd_m:desc">Highest associated funding</option>
                 <option value="funding_total_usd_m:asc">Lowest associated funding</option>
-                <option value="dedicated_emobility_funding_usd_m:desc">Highest dedicated e-mobility funding</option>
-                <option value="dedicated_emobility_funding_usd_m:asc">Lowest dedicated e-mobility funding</option>
+                <option value="dedicated_emobility_funding_usd_m:desc">Highest identified e-mobility funding</option>
+                <option value="dedicated_emobility_funding_usd_m:asc">Lowest identified e-mobility funding</option>
                 <option value="project_title:asc">Project title A–Z</option>
               </select>
             </label>
             <div className="project-table-wrap">
               <table className="project-table">
+                <colgroup>
+                  <col style={{ width: '23%' }} />
+                  <col style={{ width: '8%' }} />
+                  <col style={{ width: '11%' }} />
+                  <col style={{ width: '9%' }} />
+                  <col style={{ width: '9%' }} />
+                  <col style={{ width: '17%' }} />
+                  <col style={{ width: '9%' }} />
+                  <col style={{ width: '11%' }} />
+                  <col style={{ width: '3%' }} />
+                </colgroup>
                 <thead>
                   <tr>
                     <th aria-sort={ariaSort('project_title')}><button onClick={() => changeSort('project_title')}>Project {sortKey === 'project_title' && <SortIcon size={12} />}</button></th>
-                    <th aria-sort={ariaSort('approval_year')}><button onClick={() => changeSort('approval_year')}>Year {sortKey === 'approval_year' && <SortIcon size={12} />}</button></th>
+                    <th aria-sort={ariaSort('approval_year')}><button onClick={() => changeSort('approval_year')}>Approval / expected year {sortKey === 'approval_year' && <SortIcon size={12} />}</button></th>
                     <th>Recipient</th>
                     <th>Status</th>
                     <th>Role</th>
                     <th>Leading subthemes</th>
                     <th aria-sort={ariaSort('funding_total_usd_m')}><button onClick={() => changeSort('funding_total_usd_m')}>Associated funding {sortKey === 'funding_total_usd_m' && <SortIcon size={12} />}</button></th>
-                    <th aria-sort={ariaSort('dedicated_emobility_funding_usd_m')}><button onClick={() => changeSort('dedicated_emobility_funding_usd_m')}>Dedicated e-mobility funding {sortKey === 'dedicated_emobility_funding_usd_m' && <SortIcon size={12} />}</button></th>
+                    <th aria-sort={ariaSort('dedicated_emobility_funding_usd_m')}><button onClick={() => changeSort('dedicated_emobility_funding_usd_m')}>Identified e-mobility funding {sortKey === 'dedicated_emobility_funding_usd_m' && <SortIcon size={12} />}</button></th>
                     <th aria-label="Open source" />
                   </tr>
                 </thead>
@@ -147,7 +209,7 @@ export function ProjectsPage() {
                         </button>
                         <small>{project.sector} · {project.project_type}</small>
                       </td>
-                      <td data-label="Year">{project.approval_year}</td>
+                      <td data-label={projectYearBasis(project)}>{project.approval_year}</td>
                       <td data-label="Recipient">{project.recipient}</td>
                       <td data-label="Status"><span className="status-badge" style={{ '--status': STATUS_COLORS[project.status] } as React.CSSProperties}>{project.status}</span></td>
                       <td data-label="Role">{humanize(project.manual_attribution_class)}</td>
@@ -158,11 +220,11 @@ export function ProjectsPage() {
                         </div>
                       </td>
                       <td data-label="Associated funding"><strong className="money-cell">{fmtMoney(project.funding_total_usd_m, true)}</strong></td>
-                      <td data-label="Dedicated e-mobility funding">
+                      <td data-label="Identified e-mobility funding">
                         {dedicatedEmobilityFunding(project) === null ? (
                           <span className="funding-unavailable" title="No separately attributable dedicated amount">-</span>
                         ) : (
-                          <strong className="money-cell">
+                          <strong className="money-cell" title={dedicatedFundingBasis(project)}>
                             {project.manual_attribution_class === 'quantified_minimum' && 'At least '}
                             {fmtMoney(dedicatedEmobilityFunding(project) ?? 0, true)}
                           </strong>

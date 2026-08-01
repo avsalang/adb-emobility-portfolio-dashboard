@@ -1,5 +1,5 @@
-import { Activity } from 'lucide-react';
-import { useMemo } from 'react';
+import { Activity, Info } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -10,13 +10,22 @@ import {
   YAxis,
 } from 'recharts';
 import { KpiCard } from '../components/KpiCard';
+import {
+  DataTableDrawer,
+  DataViewButton,
+  type DataView,
+} from '../components/DataTableDrawer';
 import { PageHeader, Panel } from '../components/Panel';
 import { PortfolioMap } from '../components/PortfolioMap';
 import { usePortfolio } from '../context/PortfolioContext';
-import { buildProjectMapLocations } from '../map/projectLocations';
+import {
+  buildProjectMapLocations,
+  LOCATION_PRECISION_LABELS,
+} from '../map/projectLocations';
 import {
   COLORS,
   STATUS_COLORS,
+  dedicatedEmobilityFunding,
   fmtMoney,
   fmtNumber,
   fmtPercent,
@@ -30,10 +39,12 @@ export function OverviewPage() {
     filters,
     setFilters,
   } = usePortfolio();
+  const [dataView, setDataView] = useState<DataView | null>(null);
 
   const totalFunding = sum(filteredProjects, (project) => project.funding_total_usd_m);
-  const dedicated = filteredProjects.filter(
-    (project) => project.manual_attribution_class === 'dedicated',
+  const identifiedFunding = sum(
+    filteredProjects,
+    (project) => dedicatedEmobilityFunding(project) ?? 0,
   );
   const active = filteredProjects.filter((project) => project.status === 'Active');
   const recipientNames = new Set(
@@ -112,8 +123,8 @@ export function OverviewPage() {
           value={fmtMoney(totalFunding, true)}
         />
         <KpiCard
-          label="Associated funding of dedicated projects"
-          value={fmtMoney(sum(dedicated, (project) => project.funding_total_usd_m), true)}
+          label="Identified e-mobility funding"
+          value={`At least ${fmtMoney(identifiedFunding, true)}`}
         />
         <KpiCard
           label="Active delivery"
@@ -128,8 +139,36 @@ export function OverviewPage() {
       <div className="overview-grid">
         <Panel
           className="timeline-panel"
-          title="Project pipeline by approval year"
-          subtitle="Associated funding and project count by recorded approval year."
+          title="Project pipeline by approval or expected year"
+          subtitle="Associated funding and project count by recorded year."
+          action={
+            <DataViewButton
+              onClick={() =>
+                setDataView({
+                  title: 'Project pipeline by year',
+                  filename: 'ato_project_pipeline_by_year.csv',
+                  columns: [
+                    { key: 'year', label: 'Approval or expected year' },
+                    { key: 'funding', label: 'Associated funding (USD million)', align: 'right' },
+                    { key: 'projects', label: 'Projects', align: 'right' },
+                    { key: 'active', label: 'Active', align: 'right' },
+                    { key: 'approved', label: 'Approved', align: 'right' },
+                    { key: 'proposed', label: 'Proposed', align: 'right' },
+                    { key: 'closed', label: 'Closed', align: 'right' },
+                  ],
+                  rows: timeline.map((row) => ({
+                    year: row.year,
+                    funding: Number(row.funding.toFixed(3)),
+                    projects: row.projects,
+                    active: row.Active,
+                    approved: row.Approved,
+                    proposed: row.Proposed,
+                    closed: row.Closed,
+                  })),
+                })
+              }
+            />
+          }
         >
           <div className="timeline-small-multiples">
             <div className="timeline-chart">
@@ -150,7 +189,7 @@ export function OverviewPage() {
                   />
                   <Tooltip
                     formatter={(value) => [fmtMoney(Number(value), true), 'Associated funding']}
-                    labelFormatter={(year) => `Approval year ${year}`}
+                    labelFormatter={(year) => `Approval or expected year ${year}`}
                   />
                   <Bar dataKey="funding" fill={COLORS.teal} radius={[3, 3, 0, 0]} />
                 </BarChart>
@@ -179,7 +218,7 @@ export function OverviewPage() {
                   />
                   <Tooltip
                     formatter={(value) => [`${fmtNumber(Number(value))} projects`, 'Projects']}
-                    labelFormatter={(year) => `Approval year ${year}`}
+                    labelFormatter={(year) => `Approval or expected year ${year}`}
                   />
                   <Bar dataKey="projects" fill={COLORS.blue} radius={[3, 3, 0, 0]} />
                 </BarChart>
@@ -191,6 +230,26 @@ export function OverviewPage() {
         <Panel
           title="Delivery status"
           subtitle="Current status of projects in the filtered portfolio."
+          action={
+            <DataViewButton
+              onClick={() =>
+                setDataView({
+                  title: 'Delivery status',
+                  filename: 'ato_delivery_status.csv',
+                  columns: [
+                    { key: 'status', label: 'Status' },
+                    { key: 'projects', label: 'Projects', align: 'right' },
+                    { key: 'share', label: 'Portfolio share', align: 'right' },
+                  ],
+                  rows: statusMix.map((row) => ({
+                    status: row.name,
+                    projects: row.value,
+                    share: fmtPercent(row.value / Math.max(filteredProjects.length, 1)),
+                  })),
+                })
+              }
+            />
+          }
         >
           <div className="status-stack">
             <div className="status-track">
@@ -224,6 +283,50 @@ export function OverviewPage() {
           className="map-panel"
           title="Geographic footprint"
           subtitle="Reported project activity locations, with economy-level fallbacks where needed."
+          action={
+            <div className="panel-action-group">
+              <span
+                className="panel-info"
+                tabIndex={0}
+                title={`${new Set(projectLocations.map((location) => location.projectNumber)).size} of ${filteredProjects.length} projects mapped; ${projectLocations.filter((location) => location.precision === 'country').length} locations use economy-level coordinates.`}
+                aria-label={`${new Set(projectLocations.map((location) => location.projectNumber)).size} of ${filteredProjects.length} projects mapped; ${projectLocations.filter((location) => location.precision === 'country').length} locations use economy-level coordinates.`}
+              >
+                <Info size={16} />
+              </span>
+              <DataViewButton
+                label="View locations"
+                onClick={() =>
+                  setDataView({
+                    title: 'Mapped project locations',
+                    filename: 'ato_mapped_project_locations.csv',
+                    columns: [
+                      { key: 'project_number', label: 'Project number' },
+                      { key: 'project_title', label: 'Project title' },
+                      { key: 'location', label: 'Mapped location' },
+                      { key: 'location_type', label: 'Location type' },
+                      { key: 'recipient', label: 'Recipient' },
+                      { key: 'year', label: 'Approval or expected year', align: 'right' },
+                      { key: 'funding', label: 'Associated funding (USD million)', align: 'right' },
+                      { key: 'identified_funding', label: 'Identified e-mobility funding (USD million)', align: 'right' },
+                    ],
+                    rows: projectLocations.map((location) => ({
+                      project_number: location.projectNumber,
+                      project_title: location.projectTitle,
+                      location: location.locationName,
+                      location_type: LOCATION_PRECISION_LABELS[location.precision],
+                      recipient: location.recipient,
+                      year: location.approvalYear,
+                      funding: Number(location.funding.toFixed(3)),
+                      identified_funding:
+                        location.identifiedFunding === null
+                          ? ''
+                          : Number(location.identifiedFunding.toFixed(3)),
+                    })),
+                  })
+                }
+              />
+            </div>
+          }
         >
           <PortfolioMap
             locations={projectLocations}
@@ -233,6 +336,10 @@ export function OverviewPage() {
           />
         </Panel>
       </div>
+
+      {dataView && (
+        <DataTableDrawer view={dataView} onClose={() => setDataView(null)} />
+      )}
 
     </div>
   );

@@ -65,6 +65,19 @@ function projectPopupHtml(properties: Record<string, unknown>) {
     LOCATION_PRECISION_LABELS[
       String(properties.precision) as keyof typeof LOCATION_PRECISION_LABELS
     ] ?? 'Reported project location';
+  const identifiedFundingRaw = properties.identifiedFunding;
+  const identifiedFunding =
+    identifiedFundingRaw === null || identifiedFundingRaw === undefined
+      ? null
+      : Number(identifiedFundingRaw);
+  const identifiedFundingLine =
+    identifiedFunding !== null && Number.isFinite(identifiedFunding)
+    ? `<small>$${identifiedFunding.toLocaleString(undefined, {
+        maximumFractionDigits: 1,
+      })}M identified e-mobility funding · ${escapeHtml(
+        properties.identifiedFundingBasis,
+      )}</small>`
+    : '<small>Identified e-mobility funding not separately quantified</small>';
   return [
     '<div class="map-popup project-location-popup">',
     `<small>${escapeHtml(properties.projectNumber)} · ${escapeHtml(
@@ -73,6 +86,7 @@ function projectPopupHtml(properties: Record<string, unknown>) {
     `<strong>${escapeHtml(properties.projectTitle)}</strong>`,
     `<span>${escapeHtml(properties.locationName)}</span>`,
     `<small>${escapeHtml(precision)} · $${fundingLabel}M project envelope</small>`,
+    identifiedFundingLine,
     '</div>',
   ].join('');
 }
@@ -171,6 +185,8 @@ export function PortfolioMap({
           approvalYear: location.approvalYear,
           recipient: location.recipient,
           funding: location.funding,
+          identifiedFunding: location.identifiedFunding,
+          identifiedFundingBasis: location.identifiedFundingBasis,
           reportedLocation: location.reportedLocation,
           locationName: location.locationName,
           precision: location.precision,

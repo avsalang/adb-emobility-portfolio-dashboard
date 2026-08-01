@@ -3,6 +3,7 @@ import {
   Filter,
   RotateCcw,
   SlidersHorizontal,
+  X,
 } from 'lucide-react';
 import { useState } from 'react';
 import { usePortfolio } from '../context/PortfolioContext';
@@ -75,6 +76,9 @@ export function GlobalFilters() {
     filters.yearStart !== options.years[0] ||
       filters.yearEnd !== options.years.at(-1),
   ].filter(Boolean).length;
+  const mapProject = data.projects.find(
+    (project) => project.project_number === filters.mapProject,
+  );
 
   return (
     <section className={`global-filters ${expanded ? 'expanded' : ''}`}>
@@ -135,6 +139,22 @@ export function GlobalFilters() {
         </button>
       </div>
 
+      {mapProject && (
+        <div className="active-filter-strip">
+          <span>Map project</span>
+          <strong>{mapProject.project_number}</strong>
+          <em>{mapProject.project_title}</em>
+          <button
+            type="button"
+            onClick={() => update('mapProject', '')}
+            title="Clear map project filter"
+            aria-label={`Clear map project filter for ${mapProject.project_number}`}
+          >
+            <X size={15} />
+          </button>
+        </div>
+      )}
+
       {expanded && (
         <div id="portfolio-secondary-filters" className="filter-secondary-row">
           <SelectControl
@@ -171,12 +191,12 @@ export function GlobalFilters() {
             formatter={humanize}
           />
           <label className="range-control">
-            <span>Approval year</span>
+            <span>Approval / expected year</span>
             <div>
               <select
                 value={filters.yearStart}
                 onChange={(event) => update('yearStart', Number(event.target.value))}
-                aria-label="Approval year from"
+                aria-label="Approval or expected year from"
               >
                 {options.years
                   .filter((year) => year <= filters.yearEnd)
@@ -190,7 +210,7 @@ export function GlobalFilters() {
               <select
                 value={filters.yearEnd}
                 onChange={(event) => update('yearEnd', Number(event.target.value))}
-                aria-label="Approval year to"
+                aria-label="Approval or expected year to"
               >
                 {options.years
                   .filter((year) => year >= filters.yearStart)

@@ -4,8 +4,11 @@ import type { Project } from '../types';
 import {
   formatVehicleMode,
   formatKpiValue,
+  dedicatedEmobilityFunding,
+  dedicatedFundingBasis,
   fmtMoney,
   humanize,
+  projectYearBasis,
   shortSubtheme,
   splitTags,
 } from '../utils';
@@ -83,6 +86,7 @@ export function ProjectDrawer({
   const modalityRows = data.modalities.filter(
     (row) => row.project_number === project.project_number,
   );
+  const identifiedFunding = dedicatedEmobilityFunding(project);
 
   return (
     <div className="drawer-backdrop" onMouseDown={onClose}>
@@ -107,8 +111,18 @@ export function ProjectDrawer({
         <div className="drawer-content">
           <h2 id="project-drawer-title">{project.project_title}</h2>
           <div className="project-meta-grid">
-            <div><span>Approval year</span><strong>{project.approval_year}</strong></div>
+            <div><span>{projectYearBasis(project)}</span><strong>{project.approval_year}</strong></div>
+            <div><span>Recipient</span><strong>{project.recipient}</strong></div>
             <div><span>Associated funding</span><strong>{fmtMoney(project.funding_total_usd_m, true)}</strong></div>
+            <div>
+              <span>Identified e-mobility funding</span>
+              <strong>
+                {identifiedFunding === null
+                  ? 'Not separately quantified'
+                  : `${project.manual_attribution_class === 'quantified_minimum' ? 'At least ' : ''}${fmtMoney(identifiedFunding, true)}`}
+              </strong>
+              <small>{dedicatedFundingBasis(project)}</small>
+            </div>
             <div><span>Sector</span><strong>{project.sector}</strong></div>
             <div><span>Project type</span><strong>{project.project_type}</strong></div>
           </div>
@@ -158,7 +172,7 @@ export function ProjectDrawer({
                   <strong>{fmtMoney(row.funding_usd_m, true)}</strong>
                 </div>
               ))}
-              {recipientRows.length > 1 && (
+              {recipientRows.length > 0 && (
                 <p>
                   Recipient allocation: {recipientRows
                     .map((row) => `${row.allocated_recipient} ${fmtMoney(row.funding_usd_m, true)}`)
