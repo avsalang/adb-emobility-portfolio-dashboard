@@ -68,12 +68,14 @@ interface FleetBreakdownItem {
 
 function FleetSummaryCard({
   label,
+  description,
   total,
   breakdown,
   contributorCount,
   onViewContributors,
 }: {
   label: string;
+  description: string;
   total: number;
   breakdown: FleetBreakdownItem[];
   contributorCount: number;
@@ -117,6 +119,7 @@ function FleetSummaryCard({
           ))}
         </div>
       </div>
+      <p className="fleet-summary-description">{description}</p>
       <div className="fleet-summary-actions">
         <span>{fmtNumber(contributorCount)} contributing projects</span>
         <DataViewButton label="View projects" onClick={onViewContributors} />
@@ -337,6 +340,7 @@ export function OutputsPage() {
       <div className="kpi-grid outputs-kpi-grid">
         <FleetSummaryCard
           label="Delivered fleet (vehicles)"
+          description="Vehicles reported as delivered, completed or operational. Includes only quantified outputs attributed directly to e-mobility."
           total={deliveredFleet}
           breakdown={deliveredFleetBreakdown}
           contributorCount={new Set(deliveredFleetRows.map((row) => row.project_number)).size}
@@ -352,6 +356,7 @@ export function OutputsPage() {
         />
         <FleetSummaryCard
           label="Fleet pipeline (vehicles)"
+          description="Vehicles reported as planned, approved, financed, under procurement or proposed. These are not completed deliveries."
           total={pipelineFleet}
           breakdown={pipelineFleetBreakdown}
           contributorCount={new Set(pipelineFleetRows.map((row) => row.project_number)).size}
@@ -370,7 +375,7 @@ export function OutputsPage() {
       <div className="outputs-grid">
         <Panel
           title="Output coverage by project"
-          subtitle="Unique projects with a structured record in each output category."
+          subtitle="This counts projects reporting each type of output. It does not measure the total quantity of vehicles, infrastructure, policies or other outputs."
         >
           <div className="coverage-bars output-coverage-bars">
             {families.map((row) => (
@@ -395,7 +400,7 @@ export function OutputsPage() {
 
         <Panel
           title="Primary output profile"
-          subtitle="Share of projects by their principal e-mobility output profile."
+          subtitle="Each project is assigned one primary profile based on its most concrete e-mobility output or intended result."
         >
           <div
             className="output-profile-stack"

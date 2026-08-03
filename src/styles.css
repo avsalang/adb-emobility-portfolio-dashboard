@@ -5314,7 +5314,7 @@ small {
   min-height: 158px;
   display: grid;
   grid-template-columns: minmax(140px, 0.65fr) minmax(0, 1.35fr);
-  grid-template-rows: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto auto;
   align-items: stretch;
   gap: 20px;
 }
@@ -5331,12 +5331,22 @@ small {
 }
 
 .fleet-summary-total strong {
-  margin-top: 16px;
+  margin-top: 14px;
   color: #0f172a;
   font-size: 30px;
   line-height: 1;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
+}
+
+.fleet-summary-description {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--slate-200);
+  color: var(--slate-600);
+  font-size: 12pt;
+  line-height: 1.45;
 }
 
 .fleet-composition {
@@ -5427,8 +5437,12 @@ small {
 
   .fleet-summary-card {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto;
+    grid-template-rows: auto auto auto auto;
     gap: 16px;
+  }
+
+  .fleet-summary-description {
+    grid-column: 1;
   }
 
   .fleet-composition {

@@ -696,7 +696,7 @@ export function PortfolioProfilePage() {
       <div className="profile-main-grid">
         <Panel
           title="Subtheme coverage"
-          subtitle="Unique projects by multi-label e-mobility subtheme."
+          subtitle="A project may address more than one subtheme. Subtheme totals therefore overlap and should not be added together."
         >
           <CoverageBars
             rows={subthemes.map((row) => ({
@@ -710,7 +710,7 @@ export function PortfolioProfilePage() {
 
         <Panel
           title="E-mobility attribution"
-          subtitle="How central e-mobility is to each project."
+          subtitle="Projects are classified by how central e-mobility is to their overall scope, from dedicated operations to indirect or component-level support."
         >
           <div className="pie-profile">
             <div
@@ -771,7 +771,7 @@ export function PortfolioProfilePage() {
       <div className="two-column-grid profile-distribution-grid">
         <Panel
           title="Vehicle and transport modes"
-          subtitle="Unique project coverage by grouped mode; projects may span groups."
+          subtitle="Projects may support several vehicle types or transport modes, so mode assignments may exceed the number of projects."
         >
           <DotPlot rows={modes} denominator={filteredProjects.length} />
         </Panel>
@@ -790,7 +790,7 @@ export function PortfolioProfilePage() {
       <Panel
         className="value-chain-panel"
         title="Value-chain stages"
-        subtitle="Project coverage across the e-mobility value chain."
+        subtitle="This shows where projects provide support across the e-mobility value chain. A project may cover several stages."
       >
         <ValueChainChart
           stages={valueChain.stages}
@@ -802,7 +802,7 @@ export function PortfolioProfilePage() {
       <Panel
         className="priority-cloud-panel"
         title="Cross-cutting priorities"
-        subtitle="Recurring priorities across the portfolio."
+        subtitle="These are broader issues addressed alongside e-mobility investments, including climate action, inclusion, institutional capacity, digital systems and private sector participation."
       >
         <PriorityCloud topics={crossCuttingTopics} />
       </Panel>

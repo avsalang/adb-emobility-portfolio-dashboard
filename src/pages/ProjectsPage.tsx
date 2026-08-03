@@ -171,7 +171,9 @@ export function ProjectsPage() {
 
       <Panel
         title={`${projects.length} project${projects.length === 1 ? '' : 's'}`}
-        subtitle={query ? `Matching “${query.trim()}” in the current selection.` : 'Sortable records for the current selection.'}
+        subtitle={query
+          ? `Matching “${query.trim()}” in the current selection. A blank identified funding value means the amount could not be separated from the wider project value.`
+          : 'A blank identified funding value means the amount could not be separated from the wider project value; it does not indicate zero e-mobility support.'}
         className="project-table-panel"
       >
         {visible.length ? (

@@ -183,6 +183,7 @@ export function FundingPage() {
     <div className="page">
       <PageHeader
         title="Funding and geography"
+        description="Associated funding is the total value of projects that include an e-mobility activity. Identified funding includes only amounts that can be specifically attributed to e-mobility."
         action={
           <div className="segmented-control" role="group" aria-label="Portfolio metric">
             <button
@@ -291,7 +292,9 @@ export function FundingPage() {
           title="Assistance mix over time"
           subtitle={
             isFundingMetric
-              ? `${fundingName} by assistance type and year.`
+              ? metric === 'identified'
+                ? 'Identified e-mobility funding by assistance type and year. Amounts are allocated in proportion to each project’s recorded assistance-type funding shares.'
+                : 'Associated funding by assistance type and year.'
               : 'Project assignments by assistance type; projects may span types.'
           }
           action={
@@ -381,7 +384,11 @@ export function FundingPage() {
 
       <Panel
         title="Recipient ranking"
-        subtitle={`Recipients ranked by ${isFundingMetric ? fundingName.toLowerCase() : 'project count'}.`}
+        subtitle={
+          metric === 'identified'
+            ? 'Recipients ranked by identified e-mobility funding. Amounts are allocated in proportion to each project’s recorded recipient funding shares.'
+            : `Recipients ranked by ${isFundingMetric ? fundingName.toLowerCase() : 'project count'}.`
+        }
         action={
           <DataViewButton
             label={`View all ${recipients.length}`}

@@ -262,7 +262,7 @@ export function OverviewPage() {
         <Panel
           className="map-panel"
           title="Geographic footprint"
-          subtitle="Reported project activity locations, with economy-level fallbacks where needed."
+          subtitle="Markers show reported project activity locations. Economy-level locations are used when project documents do not identify a specific city, province, site or corridor."
           action={
             <div className="panel-action-group">
               <span
