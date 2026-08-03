@@ -9,7 +9,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { KpiCard } from '../components/KpiCard';
 import {
   DataTableDrawer,
   DataViewButton,
@@ -46,7 +45,6 @@ export function OverviewPage() {
     filteredProjects,
     (project) => dedicatedEmobilityFunding(project) ?? 0,
   );
-  const active = filteredProjects.filter((project) => project.status === 'Active');
   const recipientNames = new Set(
     filteredRecipients
       .filter((row) => row.recipient_type === 'Country')
@@ -133,14 +131,6 @@ export function OverviewPage() {
             to e-mobility; other e-mobility amounts may not be separately quantified.
           </p>
         </article>
-        <KpiCard
-          label="Active delivery"
-          value={fmtNumber(active.length)}
-        />
-        <KpiCard
-          label="Country reach"
-          value={fmtNumber(recipientNames.size)}
-        />
       </div>
 
       <div className="overview-grid">
@@ -260,6 +250,10 @@ export function OverviewPage() {
                   <small>{fmtPercent(item.value / Math.max(filteredProjects.length, 1))}</small>
                 </div>
               ))}
+            </div>
+            <div className="status-reach">
+              <span>Recipient economies</span>
+              <strong>{fmtNumber(recipientNames.size)}</strong>
             </div>
           </div>
         </Panel>
