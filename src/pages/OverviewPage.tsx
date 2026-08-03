@@ -117,15 +117,22 @@ export function OverviewPage() {
         }
       />
 
-      <div className="kpi-grid">
-        <KpiCard
-          label="Associated project funding"
-          value={fmtMoney(totalFunding, true)}
-        />
-        <KpiCard
-          label="Identified e-mobility funding"
-          value={`At least ${fmtMoney(identifiedFunding, true)}`}
-        />
+      <div className="kpi-grid overview-kpi-grid">
+        <article className="kpi-card overview-funding-card">
+          <div>
+            <span className="kpi-label">Associated project funding</span>
+            <strong>{fmtMoney(totalFunding, true)}</strong>
+          </div>
+          <div className="overview-identified-funding">
+            <span>Identified e-mobility funding</span>
+            <strong>At least {fmtMoney(identifiedFunding, true)}</strong>
+          </div>
+          <p>
+            Associated funding is the total value of projects in the portfolio.
+            Identified funding is the amount that can be specifically attributed
+            to e-mobility; other e-mobility amounts may not be separately quantified.
+          </p>
+        </article>
         <KpiCard
           label="Active delivery"
           value={fmtNumber(active.length)}

@@ -5306,6 +5306,65 @@ small {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.overview-kpi-grid {
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+.overview-funding-card {
+  min-height: 230px;
+  grid-row: 1 / 3;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.overview-funding-card > div {
+  min-width: 0;
+}
+
+.overview-funding-card > div > span {
+  display: block;
+  color: var(--slate-600);
+  font-size: 12pt;
+  line-height: 1.35;
+}
+
+.overview-funding-card > div > strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--slate-900);
+  font-size: 30px;
+  line-height: 1.1;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.overview-identified-funding {
+  padding-top: 14px;
+  border-top: 1px solid var(--slate-200);
+}
+
+.overview-funding-card p {
+  margin: 0;
+  padding-top: 11px;
+  border-top: 1px solid var(--slate-200);
+  color: var(--slate-600);
+  font-size: 12pt;
+  line-height: 1.45;
+}
+
+@media (max-width: 900px) {
+  .overview-kpi-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .overview-funding-card {
+    grid-row: auto;
+  }
+}
+
 .outputs-kpi-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
