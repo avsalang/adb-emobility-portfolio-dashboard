@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { to: '/profile', label: 'Technology profile' },
   { to: '/outputs', label: 'Outputs & KPIs' },
   { to: '/projects', label: 'Project explorer' },
+  { to: '/about', label: 'About' },
 ];
 
 export function Layout() {
@@ -64,7 +65,7 @@ export function Layout() {
           </div>
         </header>
 
-        {!loading && !error && <GlobalFilters />}
+        {!loading && !error && location.pathname !== '/about' && <GlobalFilters />}
         <main className="page-scroll">
           {loading && (
             <div className="state-panel">

@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router';
 import { PortfolioProvider } from './context/PortfolioContext';
 import { Layout } from './components/Layout';
+import { AboutPage } from './pages/AboutPage';
 import { FundingPage } from './pages/FundingPage';
 import { OutputsPage } from './pages/OutputsPage';
 import { OverviewPage } from './pages/OverviewPage';
@@ -17,6 +18,7 @@ export function App() {
           <Route path="profile" element={<PortfolioProfilePage />} />
           <Route path="outputs" element={<OutputsPage />} />
           <Route path="projects" element={<ProjectsPage />} />
+          <Route path="about" element={<AboutPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

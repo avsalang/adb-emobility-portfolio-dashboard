@@ -691,7 +691,10 @@ export function PortfolioProfilePage() {
 
   return (
     <div className="page">
-      <PageHeader title="Technology profile" />
+      <PageHeader
+        title="Technology profile"
+        description="This page describes the e-mobility activities supported by the selected projects, including technology subthemes, vehicle and transport modes, value-chain stages and cross-cutting priorities. Projects may appear in more than one category, so category counts can overlap."
+      />
 
       <div className="profile-main-grid">
         <Panel

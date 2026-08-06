@@ -115,6 +115,7 @@ export function ProjectsPage() {
     <div className="page">
       <PageHeader
         title="Project explorer"
+        description="This page provides the project-level records behind the dashboard. Search the current selection and examine each project's funding, recipients, sector, classifications, locations and reported outputs."
         action={
           <div className="project-page-actions">
             <label className="project-search">

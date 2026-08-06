@@ -335,6 +335,7 @@ export function OutputsPage() {
     <div className="page">
       <PageHeader
         title="Outputs and KPIs"
+        description="This page summarizes the physical and nonphysical outputs reported in the selected project records. Delivered or operational outputs are separated from planned or financed outputs, and aggregate quantities include only outputs that can be clearly identified from the available project text."
       />
 
       <div className="kpi-grid outputs-kpi-grid">

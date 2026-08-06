@@ -183,7 +183,7 @@ export function FundingPage() {
     <div className="page">
       <PageHeader
         title="Funding and geography"
-        description="Associated funding is the total value of projects that include an e-mobility activity. Identified funding includes only amounts that can be specifically attributed to e-mobility."
+        description="This page shows how projects and funding are distributed over time, by recipient economy, project type and form of assistance. Associated funding covers the full value of projects containing an e-mobility activity, while identified funding includes only amounts that can be specifically attributed to e-mobility."
         action={
           <div className="segmented-control" role="group" aria-label="Portfolio metric">
             <button
