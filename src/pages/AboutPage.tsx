@@ -1,15 +1,17 @@
-import { PageHeader } from '../components/Panel';
-
 const ADB_PROJECTS_PORTAL =
   'https://www.adb.org/projects?searchstax%5Bquery%5D=*&searchstax%5Bpage%5D=1&searchstax%5Border%5D=ds_date_board%20desc';
 
 export function AboutPage() {
   return (
     <div className="page about-page">
-      <PageHeader
-        title="About the ADB E-Mobility Portfolio Explorer"
-        description="The dashboard brings together project information, analytical classifications and reported outputs to support analysis of ADB-supported e-mobility activities across Asia and the Pacific."
-      />
+      <header className="about-heading">
+        <span>About</span>
+        <h1>ADB E-Mobility Portfolio Explorer</h1>
+        <p>
+          Explore ADB-supported e-mobility projects, funding and reported
+          outputs across Asia and the Pacific.
+        </p>
+      </header>
 
       <article className="about-panel">
         <section>
@@ -36,7 +38,7 @@ export function AboutPage() {
         </section>
 
         <section>
-          <h3>Scope and limitations</h3>
+          <h3>Scope and Limitations</h3>
           <p>
             The portfolio was developed by screening publicly available ADB
             project information for evidence of e-mobility activities.
