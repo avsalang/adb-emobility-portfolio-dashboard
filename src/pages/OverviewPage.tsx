@@ -141,7 +141,7 @@ export function OverviewPage() {
         <Panel
           className="timeline-panel"
           title="Project pipeline by approval or expected year"
-          subtitle="Associated funding and project count by recorded year."
+          subtitle="Associated funding and project count by recorded year. Hover over the bars for yearly values."
           action={
             <DataViewButton
               onClick={() =>
@@ -230,7 +230,7 @@ export function OverviewPage() {
 
         <Panel
           title="Delivery status"
-          subtitle="Current status of projects in the filtered portfolio."
+          subtitle="Current status of projects in the filtered portfolio. Hover over the status bar for counts."
         >
           <div className="status-stack">
             <div className="status-track">
@@ -267,7 +267,7 @@ export function OverviewPage() {
         <Panel
           className="map-panel"
           title="Geographic footprint"
-          subtitle="Markers show reported project activity locations. Country-level locations are used when project documents do not identify a specific city, province, site or corridor. Regional-level projects are reflected at the country level, where applicable."
+          subtitle="Markers show reported project activity locations. Country-level locations are used when project documents do not identify a specific city, province, site or corridor. Regional-level projects are reflected at the country level, where applicable. Hover over markers for location details and click to view projects."
           action={
             <div className="panel-action-group">
               <span

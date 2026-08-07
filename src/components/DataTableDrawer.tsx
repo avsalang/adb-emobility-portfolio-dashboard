@@ -12,6 +12,7 @@ export interface DataColumn {
 
 export interface DataView {
   title: string;
+  description?: string;
   columns: DataColumn[];
   rows: DataRow[];
   filename: string;
@@ -110,11 +111,12 @@ export function DataTableDrawer({
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="data-drawer-head">
-          <div>
+          <div className="data-drawer-title">
             <h2 id="data-drawer-title">{view.title}</h2>
             <span>{view.rows.length.toLocaleString()} records</span>
+            {view.description && <p>{view.description}</p>}
           </div>
-          <div>
+          <div className="data-drawer-actions">
             <button
               type="button"
               className="data-drawer-download"

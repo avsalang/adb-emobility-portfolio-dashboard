@@ -20,6 +20,10 @@ import {
 import { PageHeader, Panel } from '../components/Panel';
 import { usePortfolio } from '../context/PortfolioContext';
 import {
+  DataTableDrawer,
+  type DataView,
+} from '../components/DataTableDrawer';
+import {
   COLORS,
   fmtNumber,
   fmtPercent,
@@ -37,19 +41,6 @@ const ATTRIBUTION_COLORS: Record<string, string> = {
   other: '#94a3b8',
 };
 
-const ATTRIBUTION_DEFINITIONS: Record<string, string> = {
-  dedicated:
-    'E-mobility is the main purpose of the operation. The full reported project amount is counted as identified e-mobility funding.',
-  partial_or_mixed:
-    'E-mobility is a confirmed component of a broader project that also supports other activities. No amount is counted as identified e-mobility funding unless it is stated separately.',
-  indirect_or_potential:
-    'The project creates enabling conditions for e-mobility or allows it as a possible activity, but the available project information does not confirm a distinct e-mobility investment.',
-  quantified_minimum:
-    'A broader or mixed project for which a specific, defensible minimum e-mobility amount can be isolated. Only that minimum is counted as identified funding.',
-  other:
-    'Retained boundary or special cases that fit the portfolio but do not align cleanly with the other attribution categories.',
-};
-
 const SECTOR_COLORS: Record<string, string> = {
   Transport: '#1769aa',
   Energy: '#178f8f',
@@ -64,33 +55,48 @@ const VALUE_CHAIN_STAGES = [
     key: 'preparation',
     label: 'Research and preparation',
     axisLines: ['Research and', 'preparation'],
+    description:
+      'Research, feasibility work, planning, design, strategies, readiness assessments and other preparation that supports future e-mobility decisions or investment.',
   },
   {
     key: 'production',
     label: 'Production and supply',
     axisLines: ['Production and', 'supply'],
+    description:
+      'Vehicle, battery, component or equipment production, assembly and supply-chain development connected to e-mobility.',
   },
   {
     key: 'vehicle',
     label: 'Vehicle acquisition',
     axisLines: ['Vehicle', 'acquisition'],
+    description:
+      'Procurement, financing, leasing, distribution, demonstration or deployment of electric and other qualifying low-carbon vehicles.',
   },
   {
     key: 'infrastructure',
     label: 'Infrastructure deployment',
     axisLines: ['Infrastructure', 'deployment'],
+    description:
+      'Deployment of charging, swapping, depot, power-system or other infrastructure needed to operate electric transport.',
   },
   {
     key: 'operations',
     label: 'Operations and maintenance',
     axisLines: ['Operations and', 'maintenance'],
+    description:
+      'Operation, fleet or service management, maintenance and related systems or capacity needed for ongoing e-mobility services.',
   },
   {
     key: 'circularity',
     label: 'End-of-life and circularity',
     axisLines: ['End-of-life and', 'circularity'],
+    description:
+      'Battery and vehicle end-of-life management, reuse, second-life applications, refurbishment, recycling and life extension.',
   },
 ] as const;
+
+const VALUE_CHAIN_ENABLER_DESCRIPTION =
+  'Finance, policy, regulation, institutional capacity, skills, market development and implementation support that enables activity across the value chain rather than representing one physical stage.';
 
 const CROSS_CUTTING_TOPICS = [
   {
@@ -182,7 +188,6 @@ interface DistributionRow {
   name: string;
   value: number;
   color: string;
-  description?: string;
 }
 
 interface PieTooltipPayload {
@@ -212,7 +217,6 @@ function FilledPieTooltip({
         {fmtNumber(row.value)} project{row.value === 1 ? '' : 's'} ·{' '}
         {fmtPercent(row.value / Math.max(denominator, 1))}
       </strong>
-      {row.description && <small>{row.description}</small>}
     </div>
   );
 }
@@ -444,10 +448,14 @@ function ValueChainChart({
   stages,
   enablerCount,
   denominator,
+  onStageClick,
+  onEnablerClick,
 }: {
-  stages: { key: string; label: string; value: number }[];
+  stages: { key: string; label: string; value: number; description: string }[];
   enablerCount: number;
   denominator: number;
+  onStageClick: (stageKey: string) => void;
+  onEnablerClick: () => void;
 }) {
   const maximum = Math.max(...stages.map((stage) => stage.value), 1) + 7;
   return (
@@ -492,6 +500,11 @@ function ValueChainChart({
               fill={COLORS.blue}
               maxBarSize={78}
               radius={[3, 3, 0, 0]}
+              cursor="pointer"
+              onClick={(_, index) => {
+                const stage = stages[index];
+                if (stage) onStageClick(stage.key);
+              }}
             >
               <LabelList
                 dataKey="value"
@@ -513,11 +526,15 @@ function ValueChainChart({
           </div>
         ))}
       </div>
-      <div className="value-chain-enabler">
+      <button
+        type="button"
+        className="value-chain-enabler"
+        onClick={onEnablerClick}
+      >
         <span>Market and institutional enablers</span>
         <strong>{fmtNumber(enablerCount)} projects</strong>
         <small>{fmtPercent(enablerCount / Math.max(denominator, 1))}</small>
-      </div>
+      </button>
     </div>
   );
 }
@@ -609,6 +626,7 @@ function PriorityCloud({
 
 export function PortfolioProfilePage() {
   const { filteredProjects, filteredSubthemes } = usePortfolio();
+  const [dataView, setDataView] = useState<DataView | null>(null);
 
   const subthemes = useMemo(() => {
     const grouped = new Map<string, Set<string>>();
@@ -632,7 +650,6 @@ export function PortfolioProfilePage() {
       ).map((row) => ({
         ...row,
         color: ATTRIBUTION_COLORS[row.name] ?? COLORS.slate,
-        description: ATTRIBUTION_DEFINITIONS[row.name],
       })),
     [filteredProjects],
   );
@@ -705,6 +722,78 @@ export function PortfolioProfilePage() {
     [filteredProjects],
   );
 
+  const openValueChainProjects = (stageKey: string) => {
+    const stage = VALUE_CHAIN_STAGES.find((item) => item.key === stageKey);
+    if (!stage) return;
+    const projects = filteredProjects.filter((project) =>
+      canonicalValueChainStages(splitTags(project.manual_value_chain_stages)).has(
+        stage.key,
+      ),
+    );
+    setDataView({
+      title: stage.label,
+      description: stage.description,
+      filename: `ato_value_chain_${stage.key}_projects.csv`,
+      columns: [
+        { key: 'project_number', label: 'Project number' },
+        { key: 'project_title', label: 'Project title' },
+        { key: 'recipient', label: 'Recipient' },
+        { key: 'status', label: 'Status' },
+        { key: 'sector', label: 'Sector' },
+        { key: 'assignments', label: 'Recorded value-chain assignments' },
+      ],
+      rows: projects
+        .map((project) => ({
+          project_number: project.project_number,
+          project_title: project.project_title,
+          recipient: project.recipient,
+          status: project.status,
+          sector: project.sector,
+          assignments: splitTags(project.manual_value_chain_stages)
+            .filter((tag) => canonicalValueChainStages([tag]).has(stage.key))
+            .map(humanize)
+            .join('; '),
+        }))
+        .sort((a, b) =>
+          String(a.project_number).localeCompare(String(b.project_number)),
+        ),
+    });
+  };
+
+  const openValueChainEnablers = () => {
+    const projects = filteredProjects.filter((project) =>
+      splitTags(project.manual_value_chain_stages).some(isValueChainEnabler),
+    );
+    setDataView({
+      title: 'Market and institutional enablers',
+      description: VALUE_CHAIN_ENABLER_DESCRIPTION,
+      filename: 'ato_value_chain_market_institutional_enablers.csv',
+      columns: [
+        { key: 'project_number', label: 'Project number' },
+        { key: 'project_title', label: 'Project title' },
+        { key: 'recipient', label: 'Recipient' },
+        { key: 'status', label: 'Status' },
+        { key: 'sector', label: 'Sector' },
+        { key: 'assignments', label: 'Recorded enabler assignments' },
+      ],
+      rows: projects
+        .map((project) => ({
+          project_number: project.project_number,
+          project_title: project.project_title,
+          recipient: project.recipient,
+          status: project.status,
+          sector: project.sector,
+          assignments: splitTags(project.manual_value_chain_stages)
+            .filter(isValueChainEnabler)
+            .map(humanize)
+            .join('; '),
+        }))
+        .sort((a, b) =>
+          String(a.project_number).localeCompare(String(b.project_number)),
+        ),
+    });
+  };
+
   return (
     <div className="page">
       <PageHeader
@@ -729,7 +818,7 @@ export function PortfolioProfilePage() {
 
         <Panel
           title="E-mobility attribution"
-          subtitle="Projects are classified by how central e-mobility is to their overall scope, from dedicated operations to indirect or component-level support."
+          subtitle="Projects are classified by how central e-mobility is to their overall scope, from dedicated operations to indirect or component-level support. Hover over the segments for project counts."
         >
           <div className="pie-profile">
             <div
@@ -771,13 +860,7 @@ export function PortfolioProfilePage() {
             </div>
             <div className="legend-rows">
               {attribution.map((row) => (
-                <div
-                  key={row.name}
-                  className="attribution-legend-row"
-                  data-description={row.description}
-                  tabIndex={0}
-                  aria-label={`${humanize(row.name)}: ${row.description}`}
-                >
+                <div key={row.name}>
                   <i style={{ background: row.color }} />
                   <span>{humanize(row.name)}</span>
                   <strong>{row.value}</strong>
@@ -803,7 +886,7 @@ export function PortfolioProfilePage() {
 
         <Panel
           title="Sector distribution"
-          subtitle="Projects by primary ADB sector, based on information directly extracted from the project data sheets."
+          subtitle="Projects by primary ADB sector, based on information directly extracted from the project data sheets. Hover over the segments for project counts."
         >
           <SectorDonut
             rows={sectors}
@@ -815,22 +898,28 @@ export function PortfolioProfilePage() {
       <Panel
         className="value-chain-panel"
         title="Value-chain stages"
-        subtitle="This shows where projects provide support across the e-mobility value chain. A project may cover several stages."
+        subtitle="Projects are assigned to the stages where their reported activities take place; a project may cover several stages. Hover over a bar for coverage and click a bar or the enabler row for its definition and project list."
       >
         <ValueChainChart
           stages={valueChain.stages}
           enablerCount={valueChain.enablerCount}
           denominator={filteredProjects.length}
+          onStageClick={openValueChainProjects}
+          onEnablerClick={openValueChainEnablers}
         />
       </Panel>
 
       <Panel
         className="priority-cloud-panel"
         title="Cross-cutting priorities"
-        subtitle="These are broader issues addressed alongside e-mobility investments, including climate action, inclusion, institutional capacity, digital systems and private sector participation."
+        subtitle="These are broader issues addressed alongside e-mobility investments, including climate action, inclusion, institutional capacity, digital systems and private sector participation. Hover over a term for its project count."
       >
         <PriorityCloud topics={crossCuttingTopics} />
       </Panel>
+
+      {dataView && (
+        <DataTableDrawer view={dataView} onClose={() => setDataView(null)} />
+      )}
     </div>
   );
 }

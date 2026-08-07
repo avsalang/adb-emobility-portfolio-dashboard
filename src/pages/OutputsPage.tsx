@@ -11,6 +11,7 @@ import {
   fmtNumber,
   fmtPercent,
   formatVehicleMode,
+  humanize,
   sum,
 } from '../utils';
 
@@ -271,7 +272,7 @@ export function OutputsPage() {
       };
       current.value += row.value_numeric ?? 0;
       current.modes.add(formatVehicleMode(row.vehicle_or_mode));
-      current.indicators.add(row.indicator);
+      current.indicators.add(humanize(row.indicator));
       grouped.set(row.project_number, current);
     });
     return {
@@ -376,7 +377,7 @@ export function OutputsPage() {
       <div className="outputs-grid">
         <Panel
           title="Output coverage by project"
-          subtitle="This counts projects reporting each type of output. It does not measure the total quantity of vehicles, infrastructure, policies or other outputs."
+          subtitle="This counts projects reporting each type of output. It does not measure the total quantity of vehicles, infrastructure, policies or other outputs. Hover over the bars for record counts."
         >
           <div className="coverage-bars output-coverage-bars">
             {families.map((row) => (
@@ -401,7 +402,7 @@ export function OutputsPage() {
 
         <Panel
           title="Primary output profile"
-          subtitle="Each project is assigned one primary profile based on its most concrete e-mobility output or intended result."
+          subtitle="Each project is assigned one primary profile based on its most concrete e-mobility output or intended result. Hover over the segments for project counts."
         >
           <div
             className="output-profile-stack"

@@ -231,8 +231,8 @@ export function FundingPage() {
           title="Sovereign and nonsovereign trajectory"
           subtitle={
             isFundingMetric
-              ? `${fundingName} by approval or expected year.`
-              : 'Projects by approval or expected year.'
+              ? `${fundingName} by approval or expected year. Hover over the bars for yearly values.`
+              : 'Projects by approval or expected year. Hover over the bars for yearly counts.'
           }
           action={
             <DataViewButton
@@ -293,9 +293,9 @@ export function FundingPage() {
           subtitle={
             isFundingMetric
               ? metric === 'identified'
-                ? 'Identified e-mobility funding by assistance type and year. Amounts are allocated in proportion to each project’s recorded assistance-type funding shares.'
-                : 'Associated funding by assistance type and year.'
-              : 'Project assignments by assistance type; projects may span types.'
+                ? 'Identified e-mobility funding by assistance type and year. Amounts are allocated in proportion to each project’s recorded assistance-type funding shares. Hover over the bars for details.'
+                : 'Associated funding by assistance type and year. Hover over the bars for details.'
+              : 'Project assignments by assistance type; projects may span types. Hover over the bars for details.'
           }
           action={
             <DataViewButton
