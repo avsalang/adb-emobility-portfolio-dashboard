@@ -37,6 +37,19 @@ const ATTRIBUTION_COLORS: Record<string, string> = {
   other: '#94a3b8',
 };
 
+const ATTRIBUTION_DEFINITIONS: Record<string, string> = {
+  dedicated:
+    'E-mobility is the main purpose of the operation. The full reported project amount is counted as identified e-mobility funding.',
+  partial_or_mixed:
+    'E-mobility is a confirmed component of a broader project that also supports other activities. No amount is counted as identified e-mobility funding unless it is stated separately.',
+  indirect_or_potential:
+    'The project creates enabling conditions for e-mobility or allows it as a possible activity, but the available project information does not confirm a distinct e-mobility investment.',
+  quantified_minimum:
+    'A broader or mixed project for which a specific, defensible minimum e-mobility amount can be isolated. Only that minimum is counted as identified funding.',
+  other:
+    'Retained boundary or special cases that fit the portfolio but do not align cleanly with the other attribution categories.',
+};
+
 const SECTOR_COLORS: Record<string, string> = {
   Transport: '#1769aa',
   Energy: '#178f8f',
@@ -169,6 +182,7 @@ interface DistributionRow {
   name: string;
   value: number;
   color: string;
+  description?: string;
 }
 
 interface PieTooltipPayload {
@@ -198,6 +212,7 @@ function FilledPieTooltip({
         {fmtNumber(row.value)} project{row.value === 1 ? '' : 's'} ·{' '}
         {fmtPercent(row.value / Math.max(denominator, 1))}
       </strong>
+      {row.description && <small>{row.description}</small>}
     </div>
   );
 }
@@ -617,6 +632,7 @@ export function PortfolioProfilePage() {
       ).map((row) => ({
         ...row,
         color: ATTRIBUTION_COLORS[row.name] ?? COLORS.slate,
+        description: ATTRIBUTION_DEFINITIONS[row.name],
       })),
     [filteredProjects],
   );
@@ -693,7 +709,7 @@ export function PortfolioProfilePage() {
     <div className="page">
       <PageHeader
         title="Technology profile"
-        description="This page describes the e-mobility activities supported by the selected projects, including technology subthemes, vehicle and transport modes, value-chain stages and cross-cutting priorities. Projects may appear in more than one category, so category counts can overlap."
+        description="This page depicts the components of the selected projects, including technology subthemes, vehicle and transport modes, value-chain stages and cross-cutting priorities. Projects may appear in more than one category, so category counts can overlap. Independent tagging and categorization were conducted through context-based review of the directly available information in publicly available project data sheets, rather than direct keyword matching."
       />
 
       <div className="profile-main-grid">
@@ -755,7 +771,13 @@ export function PortfolioProfilePage() {
             </div>
             <div className="legend-rows">
               {attribution.map((row) => (
-                <div key={row.name}>
+                <div
+                  key={row.name}
+                  className="attribution-legend-row"
+                  data-description={row.description}
+                  tabIndex={0}
+                  aria-label={`${humanize(row.name)}: ${row.description}`}
+                >
                   <i style={{ background: row.color }} />
                   <span>{humanize(row.name)}</span>
                   <strong>{row.value}</strong>
@@ -781,7 +803,7 @@ export function PortfolioProfilePage() {
 
         <Panel
           title="Sector distribution"
-          subtitle="Projects by primary ADB sector."
+          subtitle="Projects by primary ADB sector, based on information directly extracted from the project data sheets."
         >
           <SectorDonut
             rows={sectors}

@@ -59,22 +59,24 @@ export function AboutPage() {
             categories.
           </p>
           <p>
-            AI-assisted tagging was used to screen the larger project dataset
-            and identify possible e-mobility projects. Candidate projects and
-            their classifications were then reviewed at the project level
-            using the available project text. These tags are analytical
-            classifications used by the Asian Transport Observatory and are
-            not official ADB classifications.
+            AI-assisted, context-based tagging was used to screen the larger
+            project dataset and identify possible e-mobility projects. This was
+            not a direct keyword or synonym-dictionary search. Candidate
+            projects and their classifications were then reviewed at the
+            project level using the available project text. These tags are
+            analytical classifications used by the Asian Transport Observatory
+            and are not official ADB classifications.
           </p>
           <p>
-            Associated project funding represents the value of projects that
-            contain an e-mobility activity, including projects where
-            e-mobility is one component of a wider operation. Identified
-            e-mobility funding includes only amounts that can be directly linked
-            to an e-mobility activity. A blank identified amount means that a
-            separate amount could not be established from the available
-            information; it does not mean that the project provided no support
-            for e-mobility.
+            Associated funding is the total project amount reported in the
+            publicly available project data sheets for projects included in the
+            portfolio. Identified e-mobility funding is the portion that can be
+            specifically attributed to e-mobility from the same information.
+            For mixed projects, only a separately stated e-mobility amount is
+            counted. Where an e-mobility component is described but no component
+            amount is reported, it is not added to the identified total. A blank
+            identified amount therefore means not separately quantified, not
+            zero e-mobility support.
           </p>
           <p>
             Reported outputs are included only when supported by explicit
@@ -95,6 +97,20 @@ export function AboutPage() {
             e-mobility investments. Source information may change as project
             pages are updated. Users should consult the original ADB project
             pages and documents for official project details.
+          </p>
+        </section>
+
+        <section>
+          <h3>Acknowledgements</h3>
+          <p>
+            This tool was developed with support from ADB&apos;s TA-6763 REG:
+            Accelerating Innovation in Transport, under the Pathways for
+            Decarbonization of the Transport Sector project. The project is
+            funded by the Foreign, Commonwealth &amp; Development Office
+            (FCDO) and implemented by ADB in coordination with the Climate
+            Compatible Growth (CCG) programme. It is also meant to support the
+            E-mobility Support and Investment Platform for Asia and the Pacific
+            being managed by the ADB.
           </p>
         </section>
 

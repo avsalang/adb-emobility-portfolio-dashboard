@@ -106,7 +106,7 @@ export function OverviewPage() {
     <div className="page">
       <PageHeader
         title="E-mobility portfolio"
-        description="This page provides a high-level view of the selected ADB e-mobility portfolio, including project funding, approval trends, delivery status and geographic coverage. Use the filters to examine specific periods, recipients, sectors, project types and e-mobility classifications."
+        description="This page provides a high-level view of the selected ADB e-mobility portfolio, including project funding, approval details, delivery status and geographic coverage. Use the filters to examine specific periods, recipients, sectors, project types and e-mobility classifications."
         action={
           <div className="scope-badge">
             <Activity size={15} />
@@ -127,9 +127,12 @@ export function OverviewPage() {
             <strong>At least {fmtMoney(identifiedFunding, true)}</strong>
           </div>
           <p>
-            Associated funding is the total value of projects in the portfolio.
-            Identified funding is the amount that can be specifically attributed
-            to e-mobility; other e-mobility amounts may not be separately quantified.
+            Associated funding is the full reported amount of projects in the
+            portfolio. Identified e-mobility funding includes only amounts that
+            can be directly attributed to e-mobility. Where a project includes
+            an e-mobility component but gives no separate amount, that component
+            is not included in the identified total; identified funding is
+            therefore a minimum.
           </p>
         </article>
       </div>
@@ -264,7 +267,7 @@ export function OverviewPage() {
         <Panel
           className="map-panel"
           title="Geographic footprint"
-          subtitle="Markers show reported project activity locations. Economy-level locations are used when project documents do not identify a specific city, province, site or corridor."
+          subtitle="Markers show reported project activity locations. Country-level locations are used when project documents do not identify a specific city, province, site or corridor. Regional-level projects are reflected at the country level, where applicable."
           action={
             <div className="panel-action-group">
               <span

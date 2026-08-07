@@ -1509,7 +1509,7 @@ input:focus-visible {
 }
 
 .distribution-tooltip {
-  max-width: 250px;
+  max-width: 360px;
   padding: 9px 11px;
   border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 6px;
@@ -1527,6 +1527,47 @@ input:focus-visible {
   margin-top: 3px;
   color: inherit;
   font-weight: 600;
+}
+
+.distribution-tooltip small {
+  display: block;
+  max-width: 330px;
+  margin-top: 7px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12pt;
+  line-height: 1.4;
+}
+
+.attribution-legend-row {
+  position: relative;
+  cursor: help;
+}
+
+.attribution-legend-row::after {
+  position: absolute;
+  z-index: 8;
+  right: 0;
+  bottom: calc(100% + 7px);
+  width: min(360px, 90vw);
+  padding: 10px 12px;
+  border: 1px solid var(--slate-200);
+  border-radius: 7px;
+  color: var(--slate-700);
+  background: #ffffff;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.16);
+  content: attr(data-description);
+  font-size: 12pt;
+  line-height: 1.4;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(3px);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.attribution-legend-row:hover::after,
+.attribution-legend-row:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .distribution-legend {
