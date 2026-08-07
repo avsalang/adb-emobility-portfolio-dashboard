@@ -41,6 +41,19 @@ const ATTRIBUTION_COLORS: Record<string, string> = {
   other: '#94a3b8',
 };
 
+const ATTRIBUTION_DEFINITIONS: Record<string, string> = {
+  dedicated:
+    'E-mobility is the main purpose of the operation. The full reported project amount is counted as identified e-mobility funding.',
+  partial_or_mixed:
+    'E-mobility is a confirmed component of a broader project that also supports other activities. No amount is counted as identified e-mobility funding unless it is stated separately.',
+  indirect_or_potential:
+    'The project creates enabling conditions for e-mobility or allows it as a possible activity, but the available project information does not confirm a distinct e-mobility investment.',
+  quantified_minimum:
+    'A broader or mixed project for which a specific, defensible minimum e-mobility amount can be isolated. Only that minimum is counted as identified funding.',
+  other:
+    'Retained boundary or special cases that fit the portfolio but do not align cleanly with the other attribution categories.',
+};
+
 const SECTOR_COLORS: Record<string, string> = {
   Transport: '#1769aa',
   Energy: '#178f8f',
@@ -860,7 +873,13 @@ export function PortfolioProfilePage() {
             </div>
             <div className="legend-rows">
               {attribution.map((row) => (
-                <div key={row.name}>
+                <div
+                  key={row.name}
+                  className="attribution-legend-row"
+                  data-description={ATTRIBUTION_DEFINITIONS[row.name]}
+                  tabIndex={0}
+                  aria-label={`${humanize(row.name)}: ${ATTRIBUTION_DEFINITIONS[row.name]}`}
+                >
                   <i style={{ background: row.color }} />
                   <span>{humanize(row.name)}</span>
                   <strong>{row.value}</strong>
