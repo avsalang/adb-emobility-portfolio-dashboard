@@ -5,7 +5,7 @@ import {
   X,
 } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext';
-import { fmtNumber, humanize, shortSubtheme } from '../utils';
+import { fmtNumber, shortSubtheme } from '../utils';
 
 function SelectControl({
   label,
@@ -67,7 +67,7 @@ export function GlobalFilters() {
 
   return (
     <section className="global-filters expanded">
-      <div className="filter-primary-row">
+      <div className="filter-single-row">
         <div className="filter-title">
           <SlidersHorizontal size={18} />
           <div>
@@ -77,12 +77,6 @@ export function GlobalFilters() {
             </span>
           </div>
         </div>
-        <SelectControl
-          label="Status"
-          value={filters.status}
-          options={options.statuses}
-          onChange={(value) => update('status', value)}
-        />
         <SelectControl
           label="Recipient"
           value={filters.recipient}
@@ -102,66 +96,6 @@ export function GlobalFilters() {
             },
           ]}
           onChange={(value) => update('recipient', value)}
-        />
-        <button
-          className="icon-button reset"
-          onClick={resetFilters}
-          title="Reset all filters"
-          aria-label="Reset all filters"
-        >
-          <RotateCcw size={15} />
-        </button>
-      </div>
-
-      {mapProject && (
-        <div className="active-filter-strip">
-          <span>Map project</span>
-          <strong>{mapProject.project_number}</strong>
-          <em>{mapProject.project_title}</em>
-          <button
-            type="button"
-            onClick={() => update('mapProject', '')}
-            title="Clear map project filter"
-            aria-label={`Clear map project filter for ${mapProject.project_number}`}
-          >
-            <X size={15} />
-          </button>
-        </div>
-      )}
-
-      <div id="portfolio-secondary-filters" className="filter-secondary-row">
-        <SelectControl
-          label="Subtheme"
-          value={filters.subtheme}
-          options={options.subthemes}
-          onChange={(value) => update('subtheme', value)}
-          formatter={shortSubtheme}
-        />
-        <SelectControl
-          label="Sector"
-          value={filters.sector}
-          options={options.sectors}
-          onChange={(value) => update('sector', value)}
-        />
-        <SelectControl
-          label="Project type"
-          value={filters.projectType}
-          options={options.projectTypes}
-          onChange={(value) => update('projectType', value)}
-        />
-        <SelectControl
-          label="Assistance"
-          value={filters.assistance}
-          options={options.assistance}
-          onChange={(value) => update('assistance', value)}
-          formatter={humanize}
-        />
-        <SelectControl
-          label="E-mobility role"
-          value={filters.attribution}
-          options={options.attributions}
-          onChange={(value) => update('attribution', value)}
-          formatter={humanize}
         />
         <label className="range-control">
           <span>Approval / expected year</span>
@@ -195,7 +129,56 @@ export function GlobalFilters() {
             </select>
           </div>
         </label>
+        <SelectControl
+          label="Status"
+          value={filters.status}
+          options={options.statuses}
+          onChange={(value) => update('status', value)}
+        />
+        <SelectControl
+          label="Project type"
+          value={filters.projectType}
+          options={options.projectTypes}
+          onChange={(value) => update('projectType', value)}
+        />
+        <SelectControl
+          label="E-mobility role"
+          value={filters.attribution}
+          options={options.attributions}
+          onChange={(value) => update('attribution', value)}
+        />
+        <SelectControl
+          label="Subtheme"
+          value={filters.subtheme}
+          options={options.subthemes}
+          onChange={(value) => update('subtheme', value)}
+          formatter={shortSubtheme}
+        />
+        <button
+          className="icon-button reset"
+          onClick={resetFilters}
+          title="Reset all filters"
+          aria-label="Reset all filters"
+        >
+          <RotateCcw size={15} />
+        </button>
       </div>
+
+      {mapProject && (
+        <div className="active-filter-strip">
+          <span>Map project</span>
+          <strong>{mapProject.project_number}</strong>
+          <em>{mapProject.project_title}</em>
+          <button
+            type="button"
+            onClick={() => update('mapProject', '')}
+            title="Clear map project filter"
+            aria-label={`Clear map project filter for ${mapProject.project_number}`}
+          >
+            <X size={15} />
+          </button>
+        </div>
+      )}
     </section>
   );
 }

@@ -106,7 +106,7 @@ export function OverviewPage() {
     <div className="page">
       <PageHeader
         title="E-mobility portfolio"
-        description="This page provides a high-level view of the selected ADB e-mobility portfolio, including project funding, approval details, delivery status and geographic coverage. Use the filters to examine specific periods, recipients, sectors, project types and e-mobility classifications."
+        description="This page provides a high-level view of the selected ADB e-mobility portfolio, including project funding, approval details, delivery status and geographic coverage. Use the filters to examine specific periods, recipients, delivery status, project types, e-mobility roles and subthemes."
         action={
           <div className="scope-badge">
             <Activity size={15} />
