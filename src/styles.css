@@ -4305,7 +4305,7 @@ small {
 
 .filter-primary-row {
   min-height: 86px;
-  grid-template-columns: 170px minmax(145px, 0.65fr) minmax(220px, 1fr) 96px 44px;
+  grid-template-columns: 170px minmax(145px, 0.65fr) minmax(220px, 1fr) 44px;
   align-items: end;
 }
 
@@ -4538,7 +4538,7 @@ small {
 
 @media (max-width: 1420px) {
   .filter-primary-row {
-    grid-template-columns: 155px minmax(135px, 0.65fr) minmax(210px, 1fr) 96px 44px;
+    grid-template-columns: 155px minmax(135px, 0.65fr) minmax(210px, 1fr) 44px;
   }
 
   .filter-secondary-row {
@@ -4561,7 +4561,7 @@ small {
   }
 
   .filter-primary-row {
-    grid-template-columns: 150px minmax(135px, 0.65fr) minmax(200px, 1fr) 96px 44px;
+    grid-template-columns: 150px minmax(135px, 0.65fr) minmax(200px, 1fr) 44px;
   }
 
   .filter-secondary-row {
@@ -4575,7 +4575,7 @@ small {
   }
 
   .filter-primary-row {
-    grid-template-columns: minmax(150px, 0.65fr) minmax(220px, 1fr) 96px 44px;
+    grid-template-columns: minmax(150px, 0.65fr) minmax(220px, 1fr) 44px;
   }
 
   .filter-title {
@@ -5366,6 +5366,31 @@ small {
 /* Compact KPI summaries */
 .kpi-grid-three {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.funding-analysis-section {
+  display: grid;
+  gap: 18px;
+}
+
+.funding-analysis-section + .funding-analysis-section {
+  margin-top: 30px;
+  padding-top: 28px;
+  border-top: 1px solid var(--slate-300);
+}
+
+.funding-section-heading h3 {
+  margin: 0;
+  color: var(--slate-900);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.funding-section-heading p {
+  margin: 5px 0 0;
+  color: var(--slate-600);
+  font-size: 12pt;
+  line-height: 1.45;
 }
 
 .overview-kpi-grid {

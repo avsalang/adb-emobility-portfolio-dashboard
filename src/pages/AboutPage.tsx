@@ -53,7 +53,7 @@ export function AboutPage() {
             the project number, title, recipient, approval year, sector,
             project type, assistance modality, status, funding amounts and
             reported outputs. Other fields are analytical classifications
-            developed for the dashboard, including e-mobility inclusion,
+            developed for the dashboard, including e-mobility role,
             technology subthemes, transport modes, value-chain stages,
             cross-cutting priorities, funding attribution and output
             categories.
@@ -66,6 +66,12 @@ export function AboutPage() {
             project level using the available project text. These tags are
             analytical classifications used by the Asian Transport Observatory
             and are not official ADB classifications.
+          </p>
+          <p>
+            E-mobility is classified as Principal when it is the main or
+            predominant project focus, Partial when it is a confirmed component
+            of a broader operation, and Indirect when support is enabling or
+            potential without a confirmed distinct investment.
           </p>
           <p>
             Associated funding is the total project amount reported in the

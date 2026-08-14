@@ -1,11 +1,9 @@
 import {
   ChevronDown,
-  Filter,
   RotateCcw,
   SlidersHorizontal,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
 import { usePortfolio } from '../context/PortfolioContext';
 import { fmtNumber, humanize, shortSubtheme } from '../utils';
 
@@ -59,29 +57,16 @@ export function GlobalFilters() {
     filteredProjects,
     data,
   } = usePortfolio();
-  const [expanded, setExpanded] = useState(false);
   const update = <K extends keyof typeof filters>(
     key: K,
     value: (typeof filters)[K],
   ) => setFilters((current) => ({ ...current, [key]: value }));
-  const activeFilterCount = [
-    filters.mapProject !== '',
-    filters.status !== 'All',
-    filters.projectType !== 'All',
-    filters.recipient !== 'All',
-    filters.sector !== 'All',
-    filters.subtheme !== 'All',
-    filters.assistance !== 'All',
-    filters.attribution !== 'All',
-    filters.yearStart !== options.years[0] ||
-      filters.yearEnd !== options.years.at(-1),
-  ].filter(Boolean).length;
   const mapProject = data.projects.find(
     (project) => project.project_number === filters.mapProject,
   );
 
   return (
-    <section className={`global-filters ${expanded ? 'expanded' : ''}`}>
+    <section className="global-filters expanded">
       <div className="filter-primary-row">
         <div className="filter-title">
           <SlidersHorizontal size={18} />
@@ -119,17 +104,6 @@ export function GlobalFilters() {
           onChange={(value) => update('recipient', value)}
         />
         <button
-          className={`filter-more ${expanded ? 'active' : ''}`}
-          onClick={() => setExpanded((value) => !value)}
-          title={expanded ? 'Hide additional filters' : 'Show additional filters'}
-          aria-expanded={expanded}
-          aria-controls="portfolio-secondary-filters"
-        >
-          <Filter size={15} />
-          More
-          {activeFilterCount > 0 && <b>{activeFilterCount}</b>}
-        </button>
-        <button
           className="icon-button reset"
           onClick={resetFilters}
           title="Reset all filters"
@@ -155,75 +129,73 @@ export function GlobalFilters() {
         </div>
       )}
 
-      {expanded && (
-        <div id="portfolio-secondary-filters" className="filter-secondary-row">
-          <SelectControl
-            label="Subtheme"
-            value={filters.subtheme}
-            options={options.subthemes}
-            onChange={(value) => update('subtheme', value)}
-            formatter={shortSubtheme}
-          />
-          <SelectControl
-            label="Sector"
-            value={filters.sector}
-            options={options.sectors}
-            onChange={(value) => update('sector', value)}
-          />
-          <SelectControl
-            label="Project type"
-            value={filters.projectType}
-            options={options.projectTypes}
-            onChange={(value) => update('projectType', value)}
-          />
-          <SelectControl
-            label="Assistance"
-            value={filters.assistance}
-            options={options.assistance}
-            onChange={(value) => update('assistance', value)}
-            formatter={humanize}
-          />
-          <SelectControl
-            label="E-mobility role"
-            value={filters.attribution}
-            options={options.attributions}
-            onChange={(value) => update('attribution', value)}
-            formatter={humanize}
-          />
-          <label className="range-control">
-            <span>Approval / expected year</span>
-            <div>
-              <select
-                value={filters.yearStart}
-                onChange={(event) => update('yearStart', Number(event.target.value))}
-                aria-label="Approval or expected year from"
-              >
-                {options.years
-                  .filter((year) => year <= filters.yearEnd)
-                  .map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-              </select>
-              <i />
-              <select
-                value={filters.yearEnd}
-                onChange={(event) => update('yearEnd', Number(event.target.value))}
-                aria-label="Approval or expected year to"
-              >
-                {options.years
-                  .filter((year) => year >= filters.yearStart)
-                  .map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-              </select>
-            </div>
-          </label>
-        </div>
-      )}
+      <div id="portfolio-secondary-filters" className="filter-secondary-row">
+        <SelectControl
+          label="Subtheme"
+          value={filters.subtheme}
+          options={options.subthemes}
+          onChange={(value) => update('subtheme', value)}
+          formatter={shortSubtheme}
+        />
+        <SelectControl
+          label="Sector"
+          value={filters.sector}
+          options={options.sectors}
+          onChange={(value) => update('sector', value)}
+        />
+        <SelectControl
+          label="Project type"
+          value={filters.projectType}
+          options={options.projectTypes}
+          onChange={(value) => update('projectType', value)}
+        />
+        <SelectControl
+          label="Assistance"
+          value={filters.assistance}
+          options={options.assistance}
+          onChange={(value) => update('assistance', value)}
+          formatter={humanize}
+        />
+        <SelectControl
+          label="E-mobility role"
+          value={filters.attribution}
+          options={options.attributions}
+          onChange={(value) => update('attribution', value)}
+          formatter={humanize}
+        />
+        <label className="range-control">
+          <span>Approval / expected year</span>
+          <div>
+            <select
+              value={filters.yearStart}
+              onChange={(event) => update('yearStart', Number(event.target.value))}
+              aria-label="Approval or expected year from"
+            >
+              {options.years
+                .filter((year) => year <= filters.yearEnd)
+                .map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+            </select>
+            <i />
+            <select
+              value={filters.yearEnd}
+              onChange={(event) => update('yearEnd', Number(event.target.value))}
+              aria-label="Approval or expected year to"
+            >
+              {options.years
+                .filter((year) => year >= filters.yearStart)
+                .map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+            </select>
+          </div>
+        </label>
+      </div>
     </section>
   );
 }

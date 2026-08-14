@@ -254,6 +254,23 @@ export function groupCount<T>(rows: T[], getter: (row: T) => string) {
     .sort((a, b) => b.value - a.value);
 }
 
+export type EmobilityRole = 'Principal' | 'Partial' | 'Indirect';
+
+export function emobilityRole(
+  project: Pick<Project, 'manual_attribution_class'>,
+): EmobilityRole {
+  if (
+    project.manual_attribution_class === 'dedicated' ||
+    project.manual_attribution_class === 'other'
+  ) {
+    return 'Principal';
+  }
+  if (project.manual_attribution_class === 'indirect_or_potential') {
+    return 'Indirect';
+  }
+  return 'Partial';
+}
+
 export function dedicatedEmobilityFunding(project: Project): number | null {
   if (project.manual_attribution_class === 'dedicated') {
     return project.funding_total_usd_m;
@@ -339,7 +356,7 @@ export async function downloadPortfolioWorkbook({
     identified_emobility_funding_usd_m:
       dedicatedEmobilityFunding(project),
     identified_emobility_funding_basis: dedicatedFundingBasis(project),
-    emobility_role: project.manual_attribution_class,
+    emobility_role: emobilityRole(project),
     subthemes: project.manual_subthemes,
     value_chain_stages: project.manual_value_chain_stages,
     vehicle_modes: project.manual_vehicle_modes,

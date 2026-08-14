@@ -16,9 +16,9 @@ import {
   STATUS_COLORS,
   dedicatedEmobilityFunding,
   dedicatedFundingBasis,
+  emobilityRole,
   downloadPortfolioWorkbook,
   fmtMoney,
-  humanize,
   projectYearBasis,
   shortSubtheme,
   splitTags,
@@ -239,7 +239,7 @@ export function ProjectsPage() {
                       <td data-label={projectYearBasis(project)}>{project.approval_year}</td>
                       <td data-label="Recipient">{project.recipient}</td>
                       <td data-label="Status"><span className="status-badge" style={{ '--status': STATUS_COLORS[project.status] } as React.CSSProperties}>{project.status}</span></td>
-                      <td data-label="Role">{humanize(project.manual_attribution_class)}</td>
+                    <td data-label="Role">{emobilityRole(project)}</td>
                       <td data-label="Leading subthemes">
                         <div className="table-tags">
                           {splitTags(project.manual_subthemes).slice(0, 2).map((tag) => <span key={tag}>{shortSubtheme(tag)}</span>)}

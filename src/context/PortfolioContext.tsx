@@ -16,7 +16,7 @@ import type {
   RecipientAllocation,
   SubthemeRecord,
 } from '../types';
-import { splitTags } from '../utils';
+import { emobilityRole, splitTags } from '../utils';
 
 const EMPTY_DATA: PortfolioData = {
   projects: [],
@@ -112,8 +112,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       assistance: unique(
         data.modalities.map((row) => row.generalized_assistance_type),
       ),
-      attributions: unique(
-        data.projects.map((project) => project.manual_attribution_class),
+      attributions: (['Principal', 'Partial', 'Indirect'] as const).filter(
+        (role) => data.projects.some((project) => emobilityRole(project) === role),
       ),
       years,
     };
@@ -160,7 +160,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       .filter(
         (project) =>
           filters.attribution === 'All' ||
-          project.manual_attribution_class === filters.attribution,
+          emobilityRole(project) === filters.attribution,
       )
       .filter(
         (project) =>

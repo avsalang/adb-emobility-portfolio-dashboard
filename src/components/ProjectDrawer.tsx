@@ -6,6 +6,7 @@ import {
   formatKpiValue,
   dedicatedEmobilityFunding,
   dedicatedFundingBasis,
+  emobilityRole,
   fmtMoney,
   humanize,
   projectYearBasis,
@@ -130,7 +131,7 @@ export function ProjectDrawer({
           <section className="drawer-section">
             <span className="section-label">E-mobility role</span>
             <div className="role-callout">
-              <strong>{humanize(project.manual_attribution_class)}</strong>
+              <strong>{emobilityRole(project)}</strong>
             </div>
           </section>
 

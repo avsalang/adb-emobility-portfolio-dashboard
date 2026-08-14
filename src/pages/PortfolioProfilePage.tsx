@@ -25,6 +25,7 @@ import {
 } from '../components/DataTableDrawer';
 import {
   COLORS,
+  emobilityRole,
   fmtNumber,
   fmtPercent,
   groupCount,
@@ -34,24 +35,20 @@ import {
 } from '../utils';
 
 const ATTRIBUTION_COLORS: Record<string, string> = {
-  dedicated: '#1769aa',
-  partial_or_mixed: '#178f8f',
-  indirect_or_potential: '#e9a62d',
-  quantified_minimum: '#735a83',
-  other: '#94a3b8',
+  Principal: '#1769aa',
+  Partial: '#178f8f',
+  Indirect: '#e9a62d',
 };
 
+const ATTRIBUTION_ORDER = ['Principal', 'Partial', 'Indirect'];
+
 const ATTRIBUTION_DEFINITIONS: Record<string, string> = {
-  dedicated:
-    'E-mobility is the main purpose of the operation. The full reported project amount is counted as identified e-mobility funding.',
-  partial_or_mixed:
-    'E-mobility is a confirmed component of a broader project that also supports other activities. No amount is counted as identified e-mobility funding unless it is stated separately.',
-  indirect_or_potential:
-    'The project creates enabling conditions for e-mobility or allows it as a possible activity, but the available project information does not confirm a distinct e-mobility investment.',
-  quantified_minimum:
-    'A broader or mixed project for which a specific, defensible minimum e-mobility amount can be isolated. Only that minimum is counted as identified funding.',
-  other:
-    'Retained boundary or special cases that fit the portfolio but do not align cleanly with the other attribution categories.',
+  Principal:
+    'E-mobility is the main or predominant focus of the project. The role describes project scope and does not by itself determine how much funding is counted as identified e-mobility funding.',
+  Partial:
+    'E-mobility is a confirmed component of a broader project that also supports other activities. The component may or may not have a separately reported funding amount.',
+  Indirect:
+    'The project supports enabling conditions or a potential pathway for e-mobility, but the available information does not confirm a distinct direct e-mobility investment.',
 };
 
 const SECTOR_COLORS: Record<string, string> = {
@@ -366,7 +363,7 @@ function SectorDonut({
   );
 }
 
-function modeGroup(value: string): string {
+function modeGroup(value: string): string | null {
   if (/trolley|bus/.test(value)) return 'Electric and low-carbon buses';
   if (/two_wheeler|motorcycle|scooter/.test(value)) return 'Two-wheelers';
   if (/three_wheeler|rickshaw|tuktuk|microtransit/.test(value)) {
@@ -376,7 +373,7 @@ function modeGroup(value: string): string {
     return 'Electric water transport';
   }
   if (/rail|metro|ropeway|cable/.test(value)) {
-    return 'Rail, metro and cable transit';
+    return null;
   }
   if (/commercial|delivery|distribution|four_wheeler|car|light_vehicle/.test(value)) {
     return 'Cars and commercial vehicles';
@@ -659,11 +656,17 @@ export function PortfolioProfilePage() {
     () =>
       groupCount(
         filteredProjects,
-        (project) => project.manual_attribution_class,
-      ).map((row) => ({
-        ...row,
-        color: ATTRIBUTION_COLORS[row.name] ?? COLORS.slate,
-      })),
+        (project) => emobilityRole(project),
+      )
+        .map((row) => ({
+          ...row,
+          color: ATTRIBUTION_COLORS[row.name] ?? COLORS.slate,
+        }))
+        .sort(
+          (a, b) =>
+            ATTRIBUTION_ORDER.indexOf(a.name) -
+            ATTRIBUTION_ORDER.indexOf(b.name),
+        ),
     [filteredProjects],
   );
 
@@ -707,7 +710,9 @@ export function PortfolioProfilePage() {
     const projectGroups = new Map<string, Set<string>>();
     filteredProjects.forEach((project) => {
       const groups = new Set(
-        splitTags(project.manual_vehicle_modes).map(modeGroup),
+        splitTags(project.manual_vehicle_modes)
+          .map(modeGroup)
+          .filter((group): group is string => group !== null),
       );
       groups.forEach((group) => {
         if (!projectGroups.has(group)) projectGroups.set(group, new Set());
@@ -830,14 +835,14 @@ export function PortfolioProfilePage() {
         </Panel>
 
         <Panel
-          title="E-mobility attribution"
-          subtitle="Projects are classified by how central e-mobility is to their overall scope, from dedicated operations to indirect or component-level support. Hover over the segments for project counts."
+          title="E-mobility role"
+          subtitle="Projects are classified by the role of e-mobility in their overall scope: principal, partial or indirect. Hover over the segments for project counts and over the legend for definitions."
         >
           <div className="pie-profile">
             <div
               className="pie-chart-wrap"
               role="img"
-              aria-label={`${filteredProjects.length} projects by e-mobility attribution. ${attribution
+              aria-label={`${filteredProjects.length} projects by e-mobility role. ${attribution
                 .map((row) => `${humanize(row.name)}: ${row.value}`)
                 .join('; ')}.`}
             >
