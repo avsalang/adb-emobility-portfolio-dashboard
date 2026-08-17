@@ -1,5 +1,6 @@
 import {
   BatteryCharging,
+  CircleHelp,
 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router';
@@ -20,6 +21,11 @@ export function Layout() {
   const { loading, error, selectedProject, setSelectedProject } = usePortfolio();
   const location = useLocation();
   const navRef = useRef<HTMLElement | null>(null);
+  const pageScrollRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    pageScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+  }, [location.pathname]);
 
   useEffect(() => {
     const nav = navRef.current;
@@ -52,6 +58,15 @@ export function Layout() {
               <span>{label}</span>
             </NavLink>
           ))}
+          <NavLink
+            to="/how-to"
+            className={({ isActive }) =>
+              `nav-link nav-link-guide${isActive ? ' active' : ''}`
+            }
+          >
+            <CircleHelp size={17} aria-hidden="true" />
+            <span>How to</span>
+          </NavLink>
         </nav>
       </aside>
 
@@ -65,8 +80,11 @@ export function Layout() {
           </div>
         </header>
 
-        {!loading && !error && location.pathname !== '/about' && <GlobalFilters />}
-        <main className="page-scroll">
+        {!loading &&
+          !error &&
+          !['/about', '/how-to'].includes(location.pathname) &&
+          <GlobalFilters />}
+        <main ref={pageScrollRef} className="page-scroll">
           {loading && (
             <div className="state-panel">
               <BatteryCharging size={24} />
