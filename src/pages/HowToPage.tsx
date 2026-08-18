@@ -41,14 +41,14 @@ function AnnotatedScreenshot({
             }
             aria-hidden="true"
           >
-            <b>{callout.marker}</b>
+            <b><span>{callout.marker}</span></b>
           </span>
         ))}
       </div>
       <figcaption>
         {callouts.map((callout) => (
           <span key={callout.marker}>
-            <b>{callout.marker}</b>
+            <b><span>{callout.marker}</span></b>
             {callout.label}
           </span>
         ))}

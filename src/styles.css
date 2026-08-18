@@ -5905,8 +5905,15 @@ small {
   font-size: 12pt;
   font-weight: 650;
   line-height: 1;
-  padding-top: 1px;
   text-align: center;
+}
+
+.howto-highlight b > span,
+.howto-figure figcaption b > span {
+  display: block;
+  color: inherit;
+  line-height: 1;
+  transform: translateY(-1px);
 }
 
 .howto-figure figcaption {
@@ -5938,7 +5945,6 @@ small {
   font-size: 12pt;
   font-weight: 650;
   line-height: 1;
-  padding-top: 1px;
   text-align: center;
 }
 
