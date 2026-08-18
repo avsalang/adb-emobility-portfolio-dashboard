@@ -5894,8 +5894,9 @@ small {
   left: -15px;
   width: 30px;
   height: 30px;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 2px solid #ffffff;
   border-radius: 50%;
   color: #ffffff;
@@ -5903,6 +5904,9 @@ small {
   box-shadow: 0 2px 5px rgba(15, 23, 42, 0.2);
   font-size: 12pt;
   font-weight: 650;
+  line-height: 1;
+  padding-top: 1px;
+  text-align: center;
 }
 
 .howto-figure figcaption {
@@ -5925,13 +5929,17 @@ small {
 .howto-figure figcaption b {
   width: 25px;
   height: 25px;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
   color: #ffffff;
   background: #075985;
   font-size: 12pt;
   font-weight: 650;
+  line-height: 1;
+  padding-top: 1px;
+  text-align: center;
 }
 
 .howto-instructions {
