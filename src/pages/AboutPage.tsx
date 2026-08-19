@@ -45,7 +45,7 @@ export function AboutPage() {
             Information was collected from ADB project web pages, including
             project data, descriptions, objectives, outputs, financing
             information and implementation updates. Linked project documents
-            and other downloadable files were not systematically included in
+            and other downloadable files were not included in
             the primary data collection.
           </p>
           <p>
