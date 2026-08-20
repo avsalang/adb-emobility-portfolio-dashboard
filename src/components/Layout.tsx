@@ -1,12 +1,15 @@
-import {
-  BatteryCharging,
-  CircleHelp,
-} from 'lucide-react';
+import { BatteryCharging } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router';
 import { usePortfolio } from '../context/PortfolioContext';
 import { GlobalFilters } from './GlobalFilters';
 import { ProjectDrawer } from './ProjectDrawer';
+
+const UTILITY_NAV_ITEMS = [
+  { to: '/about', label: 'About' },
+  { to: '/how-to', label: 'How to' }
+
+];
 
 const NAV_ITEMS = [
   { to: '/', label: 'Portfolio overview', end: true },
@@ -14,7 +17,6 @@ const NAV_ITEMS = [
   { to: '/profile', label: 'Technology profile' },
   { to: '/outputs', label: 'Outputs & KPIs' },
   { to: '/projects', label: 'Project explorer' },
-  { to: '/about', label: 'About' },
 ];
 
 export function Layout() {
@@ -48,25 +50,36 @@ export function Layout() {
       <aside className="sidebar">
         <div className="sidebar-title">Navigation</div>
         <nav ref={navRef} className="sidebar-nav" aria-label="Portfolio views">
-          {NAV_ITEMS.map(({ to, label, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
-            >
-              <span>{label}</span>
-            </NavLink>
-          ))}
-          <NavLink
-            to="/how-to"
-            className={({ isActive }) =>
-              `nav-link nav-link-guide${isActive ? ' active' : ''}`
-            }
-          >
-            <CircleHelp size={17} aria-hidden="true" />
-            <span>How to</span>
-          </NavLink>
+          <div className="nav-utility">
+            {UTILITY_NAV_ITEMS.map(({ to, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `nav-link nav-link-utility${isActive ? ' active' : ''}`
+                }
+              >
+                <span>{label}</span>
+              </NavLink>
+            ))}
+          </div>
+
+          <div className="nav-divider" aria-hidden="true" />
+
+          <div className="nav-dashboard">
+            {NAV_ITEMS.map(({ to, label, end }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                className={({ isActive }) =>
+                  `nav-link${isActive ? ' active' : ''}`
+                }
+              >
+                <span>{label}</span>
+              </NavLink>
+            ))}
+          </div>
         </nav>
       </aside>
 

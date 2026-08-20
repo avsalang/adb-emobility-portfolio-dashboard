@@ -6168,3 +6168,73 @@ small {
     margin-left: auto;
   }
 }
+
+/* Keep supporting pages visually separate, but subtle. */
+.nav-utility,
+.nav-dashboard {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Slightly tighter navigation than the main dashboard default. */
+.sidebar .sidebar-nav .nav-link {
+  min-height: 38px;
+  padding: 7px 12px;
+  margin-bottom: 1px;
+  border-radius: 7px;
+}
+
+.nav-utility {
+  gap: 0;
+}
+
+.nav-dashboard {
+  gap: 0;
+}
+
+.nav-divider {
+  height: 1px;
+  flex: 0 0 1px;
+  margin: 6px 10px 7px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .sidebar-nav .nav-link-utility {
+  min-height: 34px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  color: rgba(219, 234, 254, 0.68);
+  font-weight: 500;
+}
+
+.sidebar .sidebar-nav .nav-link-utility:hover {
+  color: #ffffff;
+}
+
+@media (max-width: 1120px) {
+  .sidebar .sidebar-nav {
+    align-items: center;
+  }
+
+  .nav-utility,
+  .nav-dashboard {
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .nav-divider {
+    width: 1px;
+    height: 22px;
+    flex: 0 0 1px;
+    margin: 0 4px;
+  }
+
+  .sidebar .sidebar-nav .nav-link,
+  .sidebar .sidebar-nav .nav-link-utility {
+    min-height: 36px;
+    padding: 6px 10px;
+    margin-bottom: 0;
+  }
+}
