@@ -17,10 +17,7 @@ export function AboutPage() {
         <section>
           <h3>Overview</h3>
           <p>
-            This dashboard provides an overview of ADB-supported projects that
-            include e-mobility activities. It covers projects from transport,
-            energy, finance, urban development, industry, education and other
-            sectors where electric mobility forms part of the project scope.
+            This dashboard provides an overview of ADB-financed projects that include e-mobility investments and technical assistance. It covers projects from transport, energy, finance, urban development, industry, education and other sectors where electric mobility forms part of the project scope.
           </p>
           <p>
             Users can examine where projects are located, how funding is
@@ -40,13 +37,7 @@ export function AboutPage() {
         <section>
           <h3>Scope and Limitations</h3>
           <p>
-            The portfolio was developed by screening publicly available ADB
-            project information for evidence of e-mobility activities.
-            Information was collected from ADB project web pages, including
-            project data, descriptions, objectives, outputs, financing
-            information and implementation updates. Linked project documents
-            and other downloadable files were not included in
-            the primary data collection.
+            The portfolio was developed by screening publicly available ADB-financed project information for evidence on e-mobility activities. Information was collected from ADB project web pages, including project data, descriptions, objectives, outputs, financing information and implementation updates. Linked project documents and other downloadable files were not included in the primary data collection.
           </p>
           <p>
             Some fields are taken directly from ADB project pages, including
@@ -59,13 +50,7 @@ export function AboutPage() {
             categories.
           </p>
           <p>
-            AI-assisted, context-based tagging was used to screen the larger
-            project dataset and identify possible e-mobility projects. This was
-            not a direct keyword or synonym-dictionary search. Candidate
-            projects and their classifications were then reviewed at the
-            project level using the available project text. These tags are
-            analytical classifications used by the Asian Transport Observatory
-            and are not official ADB classifications.
+            AI-assisted, context-based tagging was used to screen the larger project dataset. Based on a predefined definition of what qualifies as an e-mobility project, the AI reviewed the available project descriptions and classified projects according to whether their activities, components, or objectives met the criteria. This allowed the screening to consider the meaning and context of the project text rather than relying only on specific keywords or a fixed synonym list. Candidate projects and their classifications were then reviewed at the project level using the available project information. These tags are analytical classifications used by the Asian Transport Observatory and are not official ADB classifications.
           </p>
           <p>
             E-mobility is classified as Principal when it is the main or
@@ -74,15 +59,7 @@ export function AboutPage() {
             potential without a confirmed distinct investment.
           </p>
           <p>
-            Associated funding is the total project amount reported in the
-            publicly available project data sheets for projects included in the
-            portfolio. Identified e-mobility funding is the portion that can be
-            specifically attributed to e-mobility from the same information.
-            For mixed projects, only a separately stated e-mobility amount is
-            counted. Where an e-mobility component is described but no component
-            amount is reported, it is not added to the identified total. A blank
-            identified amount therefore means not separately quantified, not
-            zero e-mobility support.
+            Associated funding is the total project amount reported in the publicly available project data sheets for projects included in the portfolio. Identified e-mobility funding is the portion that can be specifically attributed to e-mobility from the same project information. For mixed projects, only a separately stated e-mobility amount is counted. Where an e-mobility component is described but no component amount is reported, it is not added to the identified total. A blank identified amount therefore means that evidence of e-mobility support or an e-mobility component is present, but the amount is not available from the given project information.
           </p>
           <p>
             Reported outputs are included only when supported by explicit
@@ -109,14 +86,7 @@ export function AboutPage() {
         <section>
           <h3>Acknowledgements</h3>
           <p>
-            This tool was developed with support from ADB&apos;s TA-6763 REG:
-            Accelerating Innovation in Transport, under the Pathways for
-            Decarbonization of the Transport Sector project. The project is
-            funded by the Foreign, Commonwealth &amp; Development Office
-            (FCDO) and implemented by ADB in coordination with the Climate
-            Compatible Growth (CCG) programme. It is also meant to support the
-            E-mobility Support and Investment Platform for Asia and the Pacific
-            being managed by the ADB.
+            This tool was developed as part of ADB's TA-6763 REG: Accelerating Innovation in Transport, including the E-mobility Support and Investment Platform for Asia and the Pacific  financed by the Global Environment Facility (GEF), and the Pathways for Decarbonization of the Transport Sector project, funded by the Foreign, Commonwealth & Development Office (FCDO) and implemented by ADB in coordination with the Climate Compatible Growth (CCG) programme.  The E-mobility Support and Investment Platform for Asia and the Pacific is also supported by the Green Climate Fund (GCF) and ADB E-Mobility Program, the Japan High-Level Technology Fund, and the Republic of Korea’s e-Asia and Knowledge Partnership Fund.
           </p>
         </section>
 
